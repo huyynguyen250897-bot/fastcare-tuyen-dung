@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f96d00">
+<title>FASTCARE — Báo cáo tuyển dụng</title>
+<style>
+:root{--orange:#f96d00;--orange-dark:#d95c00;--orange-light:#fff3e8;--ink:#1f2937;--muted:#6b7280;--line:#e5e7eb;--green:#15803d;--red:#b91c1c;--bg:#fafafa}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+header{background:var(--orange);color:#fff;padding:18px 16px 14px}
+header h1{margin:0;font-size:22px}
+header p{margin:4px 0 0;opacity:.95;font-size:14px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 14px 40px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin:14px 0}
+.bar label{font-size:13px;color:var(--muted)}
+.bar select,.bar input{padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:15px;background:#fff;max-width:100%}
+.btn{background:var(--orange);color:#fff;border:0;border-radius:8px;padding:9px 14px;font-size:15px;cursor:pointer}
+.btn:hover{background:var(--orange-dark)}
+.btn.ghost{background:#fff;color:var(--orange);border:1px solid var(--orange)}
+.btn:disabled{opacity:.5;cursor:default}
+.period{font-weight:700;font-size:16px}
+.mode{display:flex;border:1px solid var(--orange);border-radius:8px;overflow:hidden}
+.mode button{border:0;background:#fff;color:var(--orange);padding:8px 14px;font-size:15px;cursor:pointer}
+.mode button.on{background:var(--orange);color:#fff}
+.status{font-size:13px;color:var(--muted);margin:2px 0 0}
+.status.err{color:var(--red);font-weight:600}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h3{margin:0 0 4px;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.02em}
+.card .big{font-size:30px;font-weight:800;color:var(--orange);line-height:1.1}
+.card .sub{font-size:13px;color:var(--muted);margin-top:4px}
+.card .basis{font-size:12px;color:#9ca3af;margin-top:6px}
+section{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+section h2{margin:0 0 4px;font-size:18px}
+section .hint{font-size:13px;color:var(--muted);margin:0 0 12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--orange-light);font-size:13px}
+td.num,th.num{text-align:right}
+tr.total td{font-weight:700;background:var(--orange-light)}
+.scroll{overflow-x:auto}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.ok{background:#dcfce7;color:var(--green)}
+.badge.bad{background:#fee2e2;color:var(--red)}
+.funnel{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.step{flex:1;min-width:130px;background:var(--orange-light);border-radius:10px;padding:12px;text-align:center}
+.step .n{font-size:26px;font-weight:800;color:var(--orange)}
+.step .pct{font-size:13px;color:var(--muted)}
+details{border:1px solid var(--line);border-radius:12px;background:#fff;padding:14px 16px;margin:14px 0}
+details summary{cursor:pointer;font-weight:700;font-size:16px}
+details ul{margin:10px 0 0;padding-left:20px;font-size:14px}
+details li{margin-bottom:6px}
+footer{font-size:13px;color:var(--muted);text-align:center;padding:10px}
+footer a{color:var(--orange)}
+#loading{padding:24px;text-align:center;color:var(--muted)}
+#errorBox{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin:14px 0;color:#7f1d1d}
+@media (max-width:640px){header h1{font-size:19px}.card .big{font-size:26px}th,td{padding:6px 8px;font-size:13px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding-bottom:0">
+    <h1>FASTCARE — Báo cáo tuyển dụng</h1>
+    <p>Dữ liệu đọc trực tiếp từ Google Sheet — mở lên là số mới nhất</p>
+  </div>
+</header>
+<div class="wrap">
+
+  <div class="bar" id="filters">
+    <div class="mode" role="group" aria-label="Chế độ kỳ">
+      <button id="modeMonth" class="on" type="button">Theo tháng</button>
+      <button id="modeWeek" type="button">Theo tuần</button>
+    </div>
+    <button class="btn ghost" id="prevBtn" type="button">← Trước</button>
+    <span id="monthBox">
+      <label for="monthInput">Tháng</label>
+      <input type="month" id="monthInput" value="2026-10">
+    </span>
+    <span id="weekBox" style="display:none">
+      <label for="weekInput">Chọn ngày trong tuần</label>
+      <input type="date" id="weekInput" value="2026-10-26">
+    </span>
+    <button class="btn ghost" id="nextBtn" type="button">Sau →</button>
+    <span class="period" id="periodLabel">Tháng 10/2026</span>
+    <label for="posFilter">Vị trí</label>
+    <select id="posFilter"><option value="">Tất cả vị trí</option></select>
+    <label for="srcFilter">Nguồn</label>
+    <select id="srcFilter"><option value="">Tất cả nguồn</option></select>
+    <label for="campFilter">Tháng chiến dịch</label>
+    <select id="campFilter"><option value="">Tất cả</option></select>
+    <button class="btn" id="refreshBtn" type="button">↻ Làm mới dữ liệu</button>
+  </div>
+  <p class="status" id="statusLine">Đang tải dữ liệu từ Google Sheet…</p>
+
+  <div id="loading">Đang đọc dữ liệu từ Google Sheet, vui lòng chờ…</div>
+  <div id="errorBox"></div>
+
+  <div id="app" style="display:none">
+    <div class="cards" id="cards"></div>
+
+    <section>
+      <h2>Kết quả nhận việc</h2>
+      <p class="hint">Tính từ các ứng viên Đạt PV, với ngày phỏng vấn nằm trong kỳ đã chọn.</p>
+      <div class="cards" id="hireCards" style="margin:0"></div>
+    </section>
+
+    <section>
+      <h2>Chiến dịch</h2>
+      <p class="hint" id="campHint"></p>
+      <div class="cards" id="campCards" style="margin:0 0 12px"></div>
+      <div class="scroll"><table id="campTable"></table></div>
+    </section>
+
+    <section>
+      <h2>CV theo nguồn</h2>
+      <p class="hint">Mỗi nguồn giữ riêng (Facebook khác Facebook (ADs), TopCV khác TopCV (ADs)). Cột CV và CV Đạt tính theo ngày nhận CV; Đến PV và Đạt PV tính theo ngày phỏng vấn; Đi làm tính theo ngày vào làm — tất cả đều trong kỳ đã chọn.</p>
+      <div class="scroll"><table id="srcTable"></table></div>
+    </section>
+
+    <section>
+      <h2>Vị trí — tổng hợp theo nhóm</h2>
+      <p class="hint">Nhóm = phần chữ trước dấu “ (” — ví dụ Tư vấn (NTT) và Tư vấn (VVN) cùng nhóm “Tư vấn”. Mục tiêu KPI là tổng MỤC TIÊU của nhóm trong tháng chiến dịch của kỳ.</p>
+      <div class="scroll"><table id="posGroupTable"></table></div>
+    </section>
+
+    <section>
+      <h2>Vị trí — chi tiết từng vị trí</h2>
+      <p class="hint">Giữ đúng từng vị trí như trong Sheet. CV và CV Đạt theo ngày nhận CV; Đạt PV theo ngày phỏng vấn; Đi làm theo ngày vào làm — tất cả trong kỳ đã chọn.</p>
+      <div class="scroll"><table id="posDetailTable"></table></div>
+    </section>
+
+    <section>
+      <h2>Phễu chuyển đổi</h2>
+      <p class="hint">Mỗi bước dùng mốc ngày của chính bước đó trong kỳ đã chọn (CV theo ngày nhận CV, Đến PV và Đạt PV theo ngày phỏng vấn, Đi làm theo ngày vào làm). % là tỷ lệ so với bước ngay trước nó.</p>
+      <div class="funnel" id="funnel"></div>
+    </section>
+
+    <section>
+      <h2>Chỉ số bổ sung</h2>
+      <div class="cards" id="extraCards" style="margin:0 0 12px"></div>
+      <h3 style="margin:12px 0 6px;font-size:15px">Chi phí theo nguồn trong kỳ</h3>
+      <p class="hint">Tính theo NGÀY CHI nằm trong kỳ. Chi phí / 1 người đi làm và / 1 CV Đạt chỉ tính cho nguồn nào có chi phí trong kỳ.</p>
+      <div class="scroll"><table id="costTable"></table></div>
+      <h3 style="margin:16px 0 6px;font-size:15px">Xếp hạng theo người phụ trách</h3>
+      <p class="hint" id="staffNote"></p>
+      <div class="scroll"><table id="staffTable"></table></div>
+    </section>
+
+    <details id="howto">
+      <summary>Cách tính số — bấm để xem toàn bộ định nghĩa</summary>
+      <ul>
+        <li><b>Kỳ:</b> tháng = từ ngày 1 đến ngày cuối tháng; tuần = từ thứ 2 đến chủ nhật. Chọn ngày bất kỳ trong tuần để xác định tuần đó.</li>
+        <li><b>CV trong kỳ:</b> hàng có NGÀY (cột A tab UNGVIEN) nằm trong kỳ. CV Đạt = TRẠNG THÁI CV (cột M) là “Đạt” hoặc “Đạt, lưu backup”.</li>
+        <li><b>Phỏng vấn trong kỳ:</b> hàng có NGÀY PHỎNG VẤN (cột N) nằm trong kỳ. Đến PV = TÌNH TRẠNG ĐẾN PV (cột P) là “Đến”. Tỷ lệ đến PV = Đến PV / số buổi phỏng vấn đã lên lịch trong kỳ.</li>
+        <li><b>Đạt PV:</b> ngày phỏng vấn trong kỳ và KẾT QUẢ PHỎNG VẤN (cột Q) là “Đạt” hoặc “Đạt, lưu backup”. Lưu ý trong file này giá trị là “Đạt”, không phải “Đạt PV”.</li>
+        <li><b>Chốt đi làm trong kỳ:</b> NGÀY VÀO LÀM (cột S) nằm trong kỳ và TÌNH TRẠNG ĐI LÀM (cột R) là “Đi làm”.</li>
+        <li><b>Kết quả nhận việc:</b> tính từ các ứng viên Đạt PV (ngày phỏng vấn trong kỳ). Nhận việc = tổng số Đạt PV. Đi làm = cột R là “Đi làm”. Đang đi làm = cột R là “Đi làm” và cả NGÀY NGHỈ (cột X) lẫn GHI CHÚ LÝ DO NGHỈ VIỆC (cột Y) đều trống. Đi làm rồi nghỉ = cột R là “Đi làm” và có NGÀY NGHỈ hoặc lý do nghỉ. Không nhận việc = Đạt PV nhưng cột R là “Không đi làm”.</li>
+        <li><b>Dòng mâu thuẫn:</b> ưu tiên cột R. Ví dụ Đạt PV nhưng cột R là “Không đi làm” thì tính là Đạt PV mà không đi làm, kể cả khi NGÀY VÀO LÀM đã có ngày.</li>
+        <li><b>Chiến dịch:</b> ở chế độ tháng, lấy các dòng KPI có Tháng (cột A) bằng tháng của kỳ; ở chế độ tuần, lấy các dòng KPI có khoảng NGÀY BẮT ĐẦU – NGÀY KẾT THÚC giao với tuần. Trạng thái hoàn thành lấy nguyên cột L (KẾT QUẢ: HOÀN THÀNH / NỢ CHIẾN DỊCH), không tự tính lại từ THỰC ĐẠT và MỤC TIÊU — vì trong Sheet có dòng cột L ghi HOÀN THÀNH dù THỰC ĐẠT nhỏ hơn MỤC TIÊU.</li>
+        <li><b>Nguồn:</b> giữ riêng từng nguồn, không gộp Facebook với Facebook (ADs), TopCV với TopCV (ADs). Tỷ lệ % tính trên tổng số CV trong kỳ.</li>
+        <li><b>Vị trí:</b> có 2 bảng — tổng hợp theo nhóm (phần chữ trước “ (”) và chi tiết từng vị trí chính xác.</li>
+        <li><b>Tỷ lệ từ chối nhận việc:</b> Đạt PV mà Không đi làm / tổng số Đạt PV (ngày phỏng vấn trong kỳ).</li>
+        <li><b>Thời gian trung vị từ ngày nhận CV đến ngày vào làm:</b> tính trên các ứng viên Đi làm có ngày vào làm trong kỳ và có đủ cả 2 ngày hợp lệ, lấy giá trị giữa (median).</li>
+        <li><b>Tỷ lệ nghỉ sớm:</b> Đi làm rồi nghỉ / tổng số Đi làm (theo kết quả nhận việc trong kỳ).</li>
+        <li><b>Chi phí:</b> tab CHIPHI, tính theo NGÀY CHI nằm trong kỳ, cộng theo nguồn. Chi phí / 1 người đi làm và / 1 CV Đạt dùng số người đi làm (theo ngày vào làm) và số CV Đạt (theo ngày nhận CV) của nguồn đó trong kỳ.</li>
+        <li><b>Ngày hợp lệ:</b> chỉ nhận ngày dạng dd/mm/yyyy, năm 2000–2100 và là ngày có thật. Ngày sai (ví dụ 26/05/2206) bị bỏ qua ở bước đó, không làm lỗi cả bảng. Ngày 19/05/2025 vẫn đọc được dạng ngày, nhưng sớm hơn ngày nhận CV của chính ứng viên đó (19/05/2026) nên có thể là ghi nhầm năm.</li>
+        <li><b>Không có cột TRẠNG THÁI LÀM VIỆC trong file này:</b> “đi làm rồi nghỉ” được suy ra từ NGÀY NGHỈ (cột X) và GHI CHÚ LÝ DO NGHỈ VIỆC (cột Y), không phải từ một cột trạng thái riêng.</li>
+        <li><b>Bộ lọc:</b> vị trí, nguồn và tháng chiến dịch kết hợp với kỳ đã chọn. Lọc tháng chiến dịch dùng tên chiến dịch (cột AB của UNGVIEN, cột H của KPI) — chỉ lấy các dòng thuộc chiến dịch của tháng đó.</li>
+      </ul>
+    </details>
+  </div>
+
+  <footer>
+    Dữ liệu đọc trực tiếp từ Google Sheet —
+    <a id="sheetLink" href="https://docs.google.com/spreadsheets/d/1jAb2j3okhmTWhJtgIFxQqR3P4GeooS5-cRoZmnm1Qa4/edit?gid=1920971511#gid=1920971511" target="_blank" rel="noopener">Mở Google Sheet gốc</a>
+    · FASTCARE
+  </footer>
+</div>
+
+<script>
+"use strict";
+var SHEET_ID = "1jAb2j3okhmTWhJtgIFxQqR3P4GeooS5-cRoZmnm1Qa4";
+var SHEET_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit?gid=1920971511#gid=1920971511";
+function gvizUrl(tab){ return "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(tab); }
+
+/* ---------- CSV parsing (quoted fields, commas, embedded newlines) ---------- */
+function parseCSV(text){
+  var rows=[], row=[], cur="", inQ=false;
+  for(var i=0;i<text.length;i++){
+    var c=text[i];
+    if(inQ){
+      if(c==='"'){ if(text[i+1]==='"'){cur+='"'; i++;} else {inQ=false;} }
+      else cur+=c;
+    } else {
+      if(c==='"') inQ=true;
+      else if(c===','){ row.push(cur); cur=""; }
+      else if(c==='\n'){ row.push(cur); cur=""; rows.push(row); row=[]; }
+      else if(c==='\r'){ /* skip */ }
+      else cur+=c;
+    }
+  }
+  if(cur!=="" || row.length){ row.push(cur); rows.push(row); }
+  return rows;
+}
+
+/* ---------- Dates: strict dd/mm/yyyy, year 2000-2100, real calendar date ---------- */
+function parseDate(s){
+  if(!s) return null;
+  var m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(s).trim());
+  if(!m) return null;
+  var d=+m[1], mo=+m[2], y=+m[3];
+  if(y<2000||y>2100||mo<1||mo>12||d<1||d>31) return null;
+  var t=Date.UTC(y,mo-1,d);
+  var chk=new Date(t);
+  if(chk.getUTCFullYear()!==y||chk.getUTCMonth()!==mo-1||chk.getUTCDate()!==d) return null;
+  return t;
+}
+function fmtDate(t){ var d=new Date(t); return String(d.getUTCDate()).padStart(2,"0")+"/"+String(d.getUTCMonth()+1).padStart(2,"0")+"/"+d.getUTCFullYear(); }
+function fmtVND(n){ return n.toLocaleString("vi-VN")+" đ"; }
+function pct(a,b){ return b? (100*a/b) : 0; }
+function pctStr(a,b){ return b? pct(a,b).toFixed(1).replace(".",",")+"%" : "—"; }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function num(s){ var v=parseInt(String(s||"").replace(/[^\d-]/g,""),10); return isNaN(v)?0:v; }
+function parseMoney(s){ var v=parseInt(String(s||"").replace(/\./g,"").replace(/[^\d-]/g,""),10); return isNaN(v)?0:v; }
+function groupKey(pos){ var p=String(pos||"").trim(); var i=p.indexOf(" ("); return i>=0? p.slice(0,i).trim() : p; }
+function campaignMonthOf(name){ var m=/Tháng\s*(\d{1,2})\s*$/.exec(String(name||"").trim()); return m? +m[1] : null; }
+function median(arr){ if(!arr.length) return null; var a=arr.slice().sort(function(x,y){return x-y;}); var mid=Math.floor(a.length/2); return a.length%2? a[mid] : (a[mid-1]+a[mid])/2; }
+
+/* ---------- State ---------- */
+var DATA={ungvien:[],kpi:[],chiphi:[]};
+var state={mode:"month", month:"2026-10", weekDate:"2026-10-26", position:"", source:"", campMonth:""};
+var $=function(id){ return document.getElementById(id); };
+
+function periodRange(){
+  if(state.mode==="month"){
+    var y=+state.month.slice(0,4), m=+state.month.slice(5,7);
+    var start=Date.UTC(y,m-1,1), end=Date.UTC(y,m,0);
+    return {start:start,end:end,label:"Tháng "+m+"/"+y};
+  }
+  var d=new Date(state.weekDate+"T00:00:00Z");
+  var dow=(d.getUTCDay()+6)%7; // Mon=0
+  var start=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()-dow);
+  var end=start+6*86400000;
+  return {start:start,end:end,label:"Tuần "+fmtDate(start)+" – "+fmtDate(end)};
+}
+function inPeriod(t,pr){ return t!=null && t>=pr.start && t<=pr.end; }
+
+/* ---------- Fetch ---------- */
+function setStatus(msg,isErr){ var el=$("statusLine"); el.textContent=msg; el.className="status"+(isErr?" err":""); }
+async function loadData(){
+  $("loading").style.display="block";
+  $("errorBox").style.display="none";
+  $("app").style.display="none";
+  setStatus("Đang tải dữ liệu từ Google Sheet…");
+  try{
+    var res=await Promise.all(["UNGVIEN","KPI","CHIPHI"].map(function(tab){
+      return fetch(gvizUrl(tab)).then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status+" ("+tab+")"); return r.text(); });
+    }));
+    var u=parseCSV(res[0]).slice(1).filter(function(r){ return r.some(function(c){return String(c).trim()!=="";}); });
+    var k=parseCSV(res[1]).slice(1).filter(function(r){ return String(r[0]||"").trim().indexOf("Tháng")===0; });
+    var c=parseCSV(res[2]).slice(1).filter(function(r){ return String(r[0]||"").trim()!==""; });
+    DATA={ungvien:u,kpi:k,chiphi:c};
+    var now=new Date();
+    setStatus("Dữ liệu đọc trực tiếp từ Google Sheet — mở lên là số mới nhất · Cập nhật lúc "+now.toLocaleString("vi-VN")+" · "+u.length+" ứng viên, "+k.length+" dòng KPI, "+c.length+" dòng chi phí.");
+    $("loading").style.display="none";
+    $("app").style.display="block";
+    populateFilters();
+    render();
+  }catch(err){
+    $("loading").style.display="none";
+    var box=$("errorBox");
+    box.style.display="block";
+    box.innerHTML="Không đọc được dữ liệu từ Google Sheet ("+esc(err.message||err)+"). Vui lòng kiểm tra lại quyền chia sẻ của Sheet rồi bấm “Làm mới dữ liệu”.<br><a href=\""+SHEET_URL+"\" target=\"_blank\" rel=\"noopener\">Mở Google Sheet gốc</a>";
+    setStatus("Lỗi tải dữ liệu — chưa có số mới nhất.",true);
+  }
+}
+
+/* ---------- Filters ---------- */
+function populateFilters(){
+  var pos={} , src={} , cm={};
+  DATA.ungvien.forEach(function(r){ if(r[8]) pos[r[8].trim()]=1; if(r[7]) src[r[7].trim()]=1; });
+  DATA.kpi.forEach(function(r){ var m=/^Tháng\s*(\d{1,2})/.exec(String(r[0]||"").trim()); if(m) cm[+m[1]]=1; });
+  function fill(sel,vals,keep){
+    var cur=sel.value;
+    sel.innerHTML="<option value=\"\">"+(sel.id==="campFilter"?"Tất cả":"Tất cả")+"</option>";
+    vals.forEach(function(v){ var o=document.createElement("option"); o.value=v; o.textContent=v; sel.appendChild(o); });
+    sel.value=vals.indexOf(cur)>=0? cur : "";
+  }
+  var posSel=$("posFilter"), srcSel=$("srcFilter"), campSel=$("campFilter");
+  var posLabel=posSel.options[0].textContent;
+  fill(posSel,Object.keys(pos).sort(),true); posSel.options[0].textContent="Tất cả vị trí";
+  fill(srcSel,Object.keys(src).sort(),true); srcSel.options[0].textContent="Tất cả nguồn";
+  var months=Object.keys(cm).map(Number).sort(function(a,b){return a-b;}).map(function(n){return "Tháng "+n;});
+  campSel.innerHTML="<option value=\"\">Tất cả</option>";
+  months.forEach(function(v){ var o=document.createElement("option"); o.value=v; o.textContent=v; campSel.appendChild(o); });
+  state.position=posSel.value; state.source=srcSel.value; state.campMonth=campSel.value;
+}
+function rowPassesBase(r){
+  if(state.position && String(r[8]||"").trim()!==state.position) return false;
+  if(state.source && String(r[7]||"").trim()!==state.source) return false;
+  if(state.campMonth){ var m=campaignMonthOf(r[27]); var want=+state.campMonth.replace("Tháng ",""); if(m!==want) return false; }
+  return true;
+}
+function isDat(r){ return r[12]==="Đạt" || r[12]==="Đạt, lưu backup"; }
+function isDatPV(r){ return r[16]==="Đạt" || r[16]==="Đạt, lưu backup"; }
+
+/* ---------- Render ---------- */
+function card(title,big,sub,basis){
+  return "<div class=\"card\"><h3>"+esc(title)+"</h3><div class=\"big\">"+big+"</div>"+(sub?"<div class=\"sub\">"+sub+"</div>":"")+(basis?"<div class=\"basis\">"+esc(basis)+"</div>":"")+"</div>";
+}
+function render(){
+  var pr=periodRange();
+  $("periodLabel").textContent=pr.label;
+  $("monthBox").style.display=state.mode==="month"?"":"none";
+  $("weekBox").style.display=state.mode==="week"?"":"none";
+  $("modeMonth").className=state.mode==="month"?"on":"";
+  $("modeWeek").className=state.mode==="week"?"on":"";
+  if(!DATA.ungvien.length) return;
+
+  var base=DATA.ungvien.filter(rowPassesBase);
+  // CV basis: NGÀY in period
+  var cvRows=base.filter(function(r){ return inPeriod(parseDate(r[0]),pr); });
+  var cvDat=cvRows.filter(isDat);
+  // Interview basis: NGÀY PHỎNG VẤN in period
+  var pvRows=base.filter(function(r){ return inPeriod(parseDate(r[13]),pr); });
+  var denPv=pvRows.filter(function(r){ return String(r[15]||"").trim()==="Đến"; });
+  var datPv=pvRows.filter(isDatPV);
+  // Start basis: NGÀY VÀO LÀM in period and R = Đi làm
+  var startRows=base.filter(function(r){ return inPeriod(parseDate(r[18]),pr) && String(r[17]||"").trim()==="Đi làm"; });
+  // Hiring outcomes from Đạt PV rows
+  var diLam=datPv.filter(function(r){ return String(r[17]||"").trim()==="Đi làm"; });
+  var dangLam=diLam.filter(function(r){ return !String(r[23]||"").trim() && !String(r[24]||"").trim(); });
+  var nghiLam=diLam.filter(function(r){ return String(r[23]||"").trim() || String(r[24]||"").trim(); });
+  var khongNhan=datPv.filter(function(r){ return String(r[17]||"").trim()==="Không đi làm"; });
+
+  $("cards").innerHTML =
+    card("CV trong kỳ",cvRows.length,"CV Đạt: <b>"+cvDat.length+"</b> ("+pctStr(cvDat.length,cvRows.length)+")","Theo NGÀY nhận CV")+
+    card("Phỏng vấn trong kỳ",pvRows.length,"Đến PV: <b>"+denPv.length+"</b> · Tỷ lệ đến: <b>"+pctStr(denPv.length,pvRows.length)+"</b>","Theo NGÀY PHỎNG VẤN")+
+    card("Đạt PV",datPv.length,pctStr(datPv.length,denPv.length)+" trên số đến PV","Theo NGÀY PHỎNG VẤN")+
+    card("Chốt đi làm trong kỳ",startRows.length,pctStr(startRows.length,datPv.length)+" trên số Đạt PV","Theo NGÀY VÀO LÀM + cột R = Đi làm");
+
+  $("hireCards").innerHTML =
+    card("Nhận việc (Đạt PV)",datPv.length,"","Theo ngày phỏng vấn trong kỳ")+
+    card("Đi làm",diLam.length,pctStr(diLam.length,datPv.length)+" trên số Đạt PV","Cột R = Đi làm")+
+    card("Đang đi làm",dangLam.length,"","R = Đi làm, không có ngày nghỉ / lý do nghỉ")+
+    card("Đi làm rồi nghỉ",nghiLam.length,pctStr(nghiLam.length,diLam.length)+" trên số đi làm","Có NGÀY NGHỈ hoặc lý do nghỉ")+
+    card("Không nhận việc",khongNhan.length,pctStr(khongNhan.length,datPv.length)+" trên số Đạt PV","Đạt PV nhưng R = Không đi làm");
+
+  /* --- Campaigns --- */
+  var campRows=DATA.kpi.filter(function(r){
+    if(state.campMonth && String(r[0]||"").trim()!==state.campMonth) return false;
+    if(state.mode==="month"){ var m=/^Tháng\s*(\d{1,2})/.exec(String(r[0]||"").trim()); return m && +m[1]===+state.month.slice(5,7); }
+    var s=parseDate(r[5]), e=parseDate(r[6]);
+    return s!=null && e!=null && s<=pr.end && e>=pr.start;
+  });
+  var mt=campRows.reduce(function(a,r){return a+num(r[3]);},0);
+  var td=campRows.reduce(function(a,r){return a+num(r[4]);},0);
+  var ht=campRows.filter(function(r){return String(r[11]||"").trim()==="HOÀN THÀNH";}).length;
+  var no=campRows.filter(function(r){return String(r[11]||"").trim()==="NỢ CHIẾN DỊCH";}).length;
+  $("campHint").textContent = state.mode==="month"
+    ? "Các dòng KPI có Tháng bằng tháng của kỳ đã chọn"+(state.campMonth?" và thuộc "+state.campMonth:"")+". Trạng thái hoàn thành lấy nguyên cột L của Sheet."
+    : "Các dòng KPI có khoảng ngày bắt đầu – kết thúc giao với tuần đã chọn"+(state.campMonth?" và thuộc "+state.campMonth:"")+". Trạng thái hoàn thành lấy nguyên cột L của Sheet.";
+  $("campCards").innerHTML =
+    card("Mục tiêu (tổng)",mt,"","KPI cột D")+
+    card("Thực đạt (tổng)",td,pctStr(td,mt)+" trên mục tiêu","KPI cột E")+
+    card("Chiến dịch hoàn thành",ht,"","Cột L = HOÀN THÀNH")+
+    card("Chiến dịch nợ",no,"","Cột L = NỢ CHIẾN DỊCH")+
+    card("% chiến dịch hoàn thành",pctStr(ht,campRows.length),campRows.length+" chiến dịch","HOÀN THÀNH / tổng số");
+  var ct="<tr><th>Tên chiến dịch</th><th>Vị trí</th><th>Người phụ trách</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Kết quả (cột L)</th><th>Thời gian</th></tr>";
+  campRows.forEach(function(r){
+    var ok=String(r[11]||"").trim()==="HOÀN THÀNH";
+    ct+="<tr><td>"+esc(r[7])+"</td><td>"+esc(r[2])+"</td><td>"+esc(r[1])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td><span class=\"badge "+(ok?"ok":"bad")+"\">"+esc(r[11])+"</span></td><td>"+esc(r[5])+" – "+esc(r[6])+"</td></tr>";
+  });
+  if(!campRows.length) ct+="<tr><td colspan=\"7\">Không có chiến dịch nào trong kỳ đã chọn.</td></tr>";
+  ct+="<tr class=\"total\"><td colspan=\"3\">Tổng</td><td class=\"num\">"+mt+"</td><td class=\"num\">"+td+"</td><td colspan=\"2\">"+ht+" hoàn thành / "+no+" nợ</td></tr>";
+  $("campTable").innerHTML=ct;
+
+  /* --- Sources --- */
+  var srcMap={};
+  function srcRow(s){ if(!srcMap[s]) srcMap[s]={name:s,cv:0,cvDat:0,den:0,datPv:0,dilam:0}; return srcMap[s]; }
+  cvRows.forEach(function(r){ var x=srcRow(String(r[7]||"").trim()||"(Trống)"); x.cv++; if(isDat(r)) x.cvDat++; });
+  pvRows.forEach(function(r){ var x=srcRow(String(r[7]||"").trim()||"(Trống)"); if(String(r[15]||"").trim()==="Đến") x.den++; if(isDatPV(r)) x.datPv++; });
+  startRows.forEach(function(r){ var x=srcRow(String(r[7]||"").trim()||"(Trống)"); x.dilam++; });
+  var srcList=Object.keys(srcMap).map(function(k){return srcMap[k];}).sort(function(a,b){return b.cv-a.cv;});
+  var st="<tr><th>Nguồn</th><th class=\"num\">CV</th><th class=\"num\">% trên tổng CV</th><th class=\"num\">CV Đạt</th><th class=\"num\">Đến PV</th><th class=\"num\">Đạt PV</th><th class=\"num\">Đi làm</th><th class=\"num\">CV → Đi làm</th></tr>";
+  srcList.forEach(function(x){
+    st+="<tr><td>"+esc(x.name)+"</td><td class=\"num\">"+x.cv+"</td><td class=\"num\">"+pctStr(x.cv,cvRows.length)+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.den+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td><td class=\"num\">"+pctStr(x.dilam,x.cv)+"</td></tr>";
+  });
+  if(!srcList.length) st+="<tr><td colspan=\"8\">Không có dữ liệu trong kỳ đã chọn.</td></tr>";
+  st+="<tr class=\"total\"><td>Tổng</td><td class=\"num\">"+cvRows.length+"</td><td class=\"num\">100%</td><td class=\"num\">"+cvDat.length+"</td><td class=\"num\">"+denPv.length+"</td><td class=\"num\">"+datPv.length+"</td><td class=\"num\">"+startRows.length+"</td><td class=\"num\">"+pctStr(startRows.length,cvRows.length)+"</td></tr>";
+  $("srcTable").innerHTML=st;
+
+  /* --- Positions: grouped + exact --- */
+  function posAgg(rows, keyFn){
+    var m={};
+    rows.forEach(function(r){ var k=keyFn(String(r[8]||"").trim()||"(Trống)"); if(!m[k]) m[k]={name:k,cv:0,cvDat:0,datPv:0,dilam:0}; });
+    return m;
+  }
+  var gMap=posAgg(base,groupKey), dMap=posAgg(base,function(p){return p;});
+  cvRows.forEach(function(r){ var g=groupKey(r[8]); gMap[g].cv++; dMap[String(r[8]||"").trim()||"(Trống)"].cv++; if(isDat(r)){ gMap[g].cvDat++; dMap[String(r[8]||"").trim()||"(Trống)"].cvDat++; } });
+  pvRows.forEach(function(r){ if(isDatPV(r)){ var g=groupKey(r[8]); gMap[g].datPv++; dMap[String(r[8]||"").trim()||"(Trống)"].datPv++; } });
+  startRows.forEach(function(r){ var g=groupKey(r[8]); gMap[g].dilam++; dMap[String(r[8]||"").trim()||"(Trống)"].dilam++; });
+  // KPI target per group / exact position, from the campaign rows selected for the period
+  var kpiTargetG={}, kpiTargetD={};
+  campRows.forEach(function(r){
+    var g=groupKey(r[2]), d=String(r[2]||"").trim();
+    kpiTargetG[g]=(kpiTargetG[g]||0)+num(r[3]);
+    kpiTargetD[d]=(kpiTargetD[d]||0)+num(r[3]);
+  });
+  function posTable(map,targetMap){
+    var list=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return b.cv-a.cv;});
+    var h="<tr><th>Vị trí</th><th class=\"num\">CV</th><th class=\"num\">CV Đạt</th><th class=\"num\">Đạt PV</th><th class=\"num\">Đi làm</th><th class=\"num\">Mục tiêu KPI</th></tr>";
+    list.forEach(function(x){
+      h+="<tr><td>"+esc(x.name)+"</td><td class=\"num\">"+x.cv+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td><td class=\"num\">"+(targetMap[x.name]||0)+"</td></tr>";
+    });
+    if(!list.length) h+="<tr><td colspan=\"6\">Không có dữ liệu trong kỳ đã chọn.</td></tr>";
+    return h;
+  }
+  $("posGroupTable").innerHTML=posTable(gMap,kpiTargetG);
+  $("posDetailTable").innerHTML=posTable(dMap,kpiTargetD);
+
+  /* --- Funnel --- */
+  var steps=[
+    {n:"CV",v:cvRows.length},
+    {n:"CV Đạt",v:cvDat.length},
+    {n:"Đến PV",v:denPv.length},
+    {n:"Đạt PV",v:datPv.length},
+    {n:"Đi làm",v:startRows.length}
+  ];
+  var fh="";
+  steps.forEach(function(s,i){
+    var p=i===0? "100%" : pctStr(s.v,steps[i-1].v)+" so với bước trước";
+    fh+="<div class=\"step\"><div class=\"n\">"+s.v+"</div><div>"+esc(s.n)+"</div><div class=\"pct\">"+p+"</div></div>";
+  });
+  $("funnel").innerHTML=fh;
+
+  /* --- Extra metrics --- */
+  var decline=pctStr(khongNhan.length,datPv.length);
+  var deltas=startRows.map(function(r){ var a=parseDate(r[0]), b=parseDate(r[18]); return (a!=null&&b!=null)? Math.round((b-a)/86400000) : null; }).filter(function(v){return v!=null;});
+  var med=median(deltas);
+  var early=pctStr(nghiLam.length,diLam.length);
+  $("extraCards").innerHTML =
+    card("Tỷ lệ từ chối nhận việc",decline,khongNhan.length+" / "+datPv.length+" Đạt PV","Đạt PV mà Không đi làm")+
+    card("Thời gian trung vị CV → đi làm",med==null?"—":med+" ngày","Trên "+deltas.length+" người đi làm có đủ 2 ngày","Từ NGÀY nhận CV đến NGÀY VÀO LÀM")+
+    card("Tỷ lệ nghỉ sớm",early,nghiLam.length+" / "+diLam.length+" người đi làm","Đi làm rồi nghỉ / Đi làm");
+
+  /* --- Costs --- */
+  var costMap={};
+  var costTotal=0;
+  DATA.chiphi.forEach(function(r){
+    var d=parseDate(r[0]); if(!inPeriod(d,pr)) return;
+    var s=String(r[1]||"").trim()||"(Trống)", amt=parseMoney(r[2]);
+    if(!costMap[s]) costMap[s]={name:s,cost:0};
+    costMap[s].cost+=amt; costTotal+=amt;
+  });
+  // per-source Đi làm and CV Đạt in period (respect position/campaign filters, not source filter)
+  var dilamBySrc={}, datBySrc={};
+  startRows.forEach(function(r){ var s=String(r[7]||"").trim()||"(Trống)"; dilamBySrc[s]=(dilamBySrc[s]||0)+1; });
+  cvDat.forEach(function(r){ var s=String(r[7]||"").trim()||"(Trống)"; datBySrc[s]=(datBySrc[s]||0)+1; });
+  var costList=Object.keys(costMap).map(function(k){return costMap[k];}).sort(function(a,b){return b.cost-a.cost;});
+  var ch="<tr><th>Nguồn</th><th class=\"num\">Chi phí trong kỳ</th><th class=\"num\">Chi phí / 1 người đi làm</th><th class=\"num\">Chi phí / 1 CV Đạt</th></tr>";
+  costList.forEach(function(x){
+    var perHire=dilamBySrc[x.name]? fmtVND(Math.round(x.cost/dilamBySrc[x.name])) : "—";
+    var perDat=datBySrc[x.name]? fmtVND(Math.round(x.cost/datBySrc[x.name])) : "—";
+    ch+="<tr><td>"+esc(x.name)+"</td><td class=\"num\">"+fmtVND(x.cost)+"</td><td class=\"num\">"+perHire+"</td><td class=\"num\">"+perDat+"</td></tr>";
+  });
+  if(!costList.length) ch+="<tr><td colspan=\"4\">Không có chi phí nào trong kỳ đã chọn.</td></tr>";
+  ch+="<tr class=\"total\"><td>Tổng</td><td class=\"num\">"+fmtVND(costTotal)+"</td><td class=\"num\">"+(startRows.length?fmtVND(Math.round(costTotal/startRows.length)):"—")+"</td><td class=\"num\">"+(cvDat.length?fmtVND(Math.round(costTotal/cvDat.length)):"—")+"</td></tr>";
+  $("costTable").innerHTML=ch;
+
+  /* --- Staff ranking --- */
+  var staffMap={};
+  function stRow(p){ if(!staffMap[p]) staffMap[p]={name:p,cv:0,cvDat:0,den:0,datPv:0,dilam:0}; return staffMap[p]; }
+  cvRows.forEach(function(r){ var x=stRow(String(r[1]||"").trim()||"(Trống)"); x.cv++; if(isDat(r)) x.cvDat++; });
+  pvRows.forEach(function(r){ var x=stRow(String(r[1]||"").trim()||"(Trống)"); if(String(r[15]||"").trim()==="Đến") x.den++; if(isDatPV(r)) x.datPv++; });
+  startRows.forEach(function(r){ var x=stRow(String(r[1]||"").trim()||"(Trống)"); x.dilam++; });
+  var staffList=Object.keys(staffMap).map(function(k){return staffMap[k];}).sort(function(a,b){return b.dilam-a.dilam;});
+  $("staffNote").textContent="Trong file này chỉ có một người phụ trách là Quang Đại.";
+  var sh="<tr><th>Nhân viên phụ trách</th><th class=\"num\">CV</th><th class=\"num\">CV Đạt</th><th class=\"num\">Đến PV</th><th class=\"num\">Đạt PV</th><th class=\"num\">Đi làm</th></tr>";
+  staffList.forEach(function(x){
+    sh+="<tr><td>"+esc(x.name)+"</td><td class=\"num\">"+x.cv+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.den+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td></tr>";
+  });
+  if(!staffList.length) sh+="<tr><td colspan=\"6\">Không có dữ liệu trong kỳ đã chọn.</td></tr>";
+  $("staffTable").innerHTML=sh;
+}
+
+/* ---------- Events ---------- */
+$("modeMonth").addEventListener("click",function(){ state.mode="month"; render(); });
+$("modeWeek").addEventListener("click",function(){ state.mode="week"; render(); });
+$("monthInput").addEventListener("change",function(){ state.month=this.value||"2026-10"; render(); });
+$("weekInput").addEventListener("change",function(){ state.weekDate=this.value||"2026-10-26"; render(); });
+$("prevBtn").addEventListener("click",function(){
+  if(state.mode==="month"){ var y=+state.month.slice(0,4), m=+state.month.slice(5,7)-1; if(m<1){m=12;y--;} state.month=y+"-"+String(m).padStart(2,"0"); $("monthInput").value=state.month; }
+  else { var d=new Date(state.weekDate+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()-7); state.weekDate=d.toISOString().slice(0,10); $("weekInput").value=state.weekDate; }
+  render();
+});
+$("nextBtn").addEventListener("click",function(){
+  if(state.mode==="month"){ var y=+state.month.slice(0,4), m=+state.month.slice(5,7)+1; if(m>12){m=1;y++;} state.month=y+"-"+String(m).padStart(2,"0"); $("monthInput").value=state.month; }
+  else { var d=new Date(state.weekDate+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()+7); state.weekDate=d.toISOString().slice(0,10); $("weekInput").value=state.weekDate; }
+  render();
+});
+$("posFilter").addEventListener("change",function(){ state.position=this.value; render(); });
+$("srcFilter").addEventListener("change",function(){ state.source=this.value; render(); });
+$("campFilter").addEventListener("change",function(){ state.campMonth=this.value; render(); });
+$("refreshBtn").addEventListener("click",function(){ loadData(); });
+
+loadData();
+</script>
+</body>
+</html>
