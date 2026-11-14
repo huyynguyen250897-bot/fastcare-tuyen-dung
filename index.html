@@ -56,6 +56,24 @@ footer{font-size:13px;color:var(--muted);text-align:center;padding:10px}
 footer a{color:var(--orange)}
 #loading{padding:24px;text-align:center;color:var(--muted)}
 #errorBox{display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin:14px 0;color:#7f1d1d}
+.numlink{cursor:pointer;border-bottom:2px dotted var(--orange)}
+.numlink:hover{color:var(--orange-dark)}
+td.numlink{color:var(--orange);font-weight:700}
+.hint2{font-size:13px;color:var(--muted);margin:0 0 12px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;z-index:100}
+.modal{background:#fff;border-radius:12px;max-width:560px;width:100%;max-height:85vh;display:flex;flex-direction:column;padding:16px}
+.modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.modal-head h3{margin:0;font-size:18px}
+.modal-close{border:1px solid var(--line);background:#fff;border-radius:8px;font-size:16px;padding:4px 10px;cursor:pointer}
+.modal-note{font-size:13px;color:var(--muted);margin:6px 0 10px}
+.modal input[type=search]{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font-size:15px;margin-bottom:8px}
+.modal-count{font-size:13px;color:var(--muted);margin:0 0 8px}
+.modal-list{overflow-y:auto}
+.modal-row{padding:9px 4px;border-bottom:1px solid var(--line)}
+.modal-row .nm{font-weight:700}
+.modal-row .ps{font-size:13px;color:var(--muted)}
+.modal-row .dt{font-size:13px;color:var(--muted)}
+.modal-foot{margin-top:12px;text-align:right}
 @media (max-width:640px){header h1{font-size:19px}.card .big{font-size:26px}th,td{padding:6px 8px;font-size:13px}}
 </style>
 </head>
@@ -99,10 +117,11 @@ footer a{color:var(--orange)}
 
   <div id="app" style="display:none">
     <div class="cards" id="cards"></div>
+    <p class="hint2">Bấm vào một số liệu để xem danh sách họ tên và vị trí.</p>
 
     <section>
       <h2>Kết quả nhận việc</h2>
-      <p class="hint">Tính từ các ứng viên Đạt PV, với ngày phỏng vấn nằm trong kỳ đã chọn.</p>
+      <p class="hint">Tính từ các ứng viên Đạt PV, với ngày phỏng vấn nằm trong kỳ đã chọn. Bấm vào một số liệu để xem danh sách họ tên và vị trí.</p>
       <div class="cards" id="hireCards" style="margin:0"></div>
     </section>
 
@@ -114,20 +133,45 @@ footer a{color:var(--orange)}
     </section>
 
     <section>
+      <h2>Cần thực hiện trong kỳ</h2>
+      <p class="hint">Tổng số chiến dịch cần thực hiện trong kỳ = chiến dịch phát sinh trong kỳ (ngày bắt đầu nằm trong kỳ) + chiến dịch tháng cũ còn nợ (ngày bắt đầu trước kỳ và cột L = NỢ CHIẾN DỊCH).</p>
+      <div class="cards" id="needCards" style="margin:0 0 12px"></div>
+      <p class="hint" id="needLine"></p>
+    </section>
+
+    <section>
+      <h2>Chiến dịch hoàn thành trong kỳ</h2>
+      <p class="hint">Cột L = HOÀN THÀNH, và tháng của chiến dịch bằng tháng của kỳ (chế độ tháng) hoặc khoảng ngày của chiến dịch giao với tuần (chế độ tuần).</p>
+      <div class="cards" id="doneCards" style="margin:0 0 12px"></div>
+      <div class="scroll"><table id="doneTable"></table></div>
+    </section>
+
+    <section>
+      <h2>Chiến dịch còn nợ tại thời điểm lọc</h2>
+      <p class="hint">Tính tại cuối kỳ đã chọn (cuối tháng hoặc chủ nhật của tuần): cột L = NỢ CHIẾN DỊCH và ngày bắt đầu không sau cuối kỳ. Quá hạn = ngày kết thúc trước cuối kỳ; trong hạn = ngày kết thúc từ cuối kỳ trở đi.</p>
+      <h3 style="margin:12px 0 6px;font-size:15px">Quá hạn</h3>
+      <div class="cards" id="overdueCards" style="margin:0 0 12px"></div>
+      <div class="scroll"><table id="overdueTable"></table></div>
+      <h3 style="margin:16px 0 6px;font-size:15px">Trong hạn</h3>
+      <div class="cards" id="inDeadlineCards" style="margin:0 0 12px"></div>
+      <div class="scroll"><table id="inDeadlineTable"></table></div>
+    </section>
+
+    <section>
       <h2>CV theo nguồn</h2>
-      <p class="hint">Mỗi nguồn giữ riêng (Facebook khác Facebook (ADs), TopCV khác TopCV (ADs)). Cột CV và CV Đạt tính theo ngày nhận CV; Đến PV và Đạt PV tính theo ngày phỏng vấn; Đi làm tính theo ngày vào làm — tất cả đều trong kỳ đã chọn.</p>
+      <p class="hint">Mỗi nguồn giữ riêng (Facebook khác Facebook (ADs), TopCV khác TopCV (ADs)). Cột CV và CV Đạt tính theo ngày nhận CV; Đến PV và Đạt PV tính theo ngày phỏng vấn; Đi làm tính theo ngày vào làm — tất cả đều trong kỳ đã chọn. Bấm vào số CV của một nguồn để xem danh sách họ tên và vị trí của nguồn đó.</p>
       <div class="scroll"><table id="srcTable"></table></div>
     </section>
 
     <section>
       <h2>Vị trí — tổng hợp theo nhóm</h2>
-      <p class="hint">Nhóm = phần chữ trước dấu “ (” — ví dụ Tư vấn (NTT) và Tư vấn (VVN) cùng nhóm “Tư vấn”. Mục tiêu KPI là tổng MỤC TIÊU của nhóm trong tháng chiến dịch của kỳ.</p>
+      <p class="hint">Nhóm = phần chữ trước dấu “ (” — ví dụ Tư vấn (NTT) và Tư vấn (VVN) cùng nhóm “Tư vấn”. Mục tiêu KPI là tổng MỤC TIÊU của nhóm trong tháng chiến dịch của kỳ. Bấm vào số CV của một nhóm để xem danh sách họ tên và vị trí.</p>
       <div class="scroll"><table id="posGroupTable"></table></div>
     </section>
 
     <section>
       <h2>Vị trí — chi tiết từng vị trí</h2>
-      <p class="hint">Giữ đúng từng vị trí như trong Sheet. CV và CV Đạt theo ngày nhận CV; Đạt PV theo ngày phỏng vấn; Đi làm theo ngày vào làm — tất cả trong kỳ đã chọn.</p>
+      <p class="hint">Giữ đúng từng vị trí như trong Sheet. CV và CV Đạt theo ngày nhận CV; Đạt PV theo ngày phỏng vấn; Đi làm theo ngày vào làm — tất cả trong kỳ đã chọn. Bấm vào số CV của một vị trí để xem danh sách họ tên và vị trí.</p>
       <div class="scroll"><table id="posDetailTable"></table></div>
     </section>
 
@@ -159,6 +203,10 @@ footer a{color:var(--orange)}
         <li><b>Kết quả nhận việc:</b> tính từ các ứng viên Đạt PV (ngày phỏng vấn trong kỳ). Nhận việc = tổng số Đạt PV. Đi làm = cột R là “Đi làm”. Đang đi làm = cột R là “Đi làm” và cả NGÀY NGHỈ (cột X) lẫn GHI CHÚ LÝ DO NGHỈ VIỆC (cột Y) đều trống. Đi làm rồi nghỉ = cột R là “Đi làm” và có NGÀY NGHỈ hoặc lý do nghỉ. Không nhận việc = Đạt PV nhưng cột R là “Không đi làm”.</li>
         <li><b>Dòng mâu thuẫn:</b> ưu tiên cột R. Ví dụ Đạt PV nhưng cột R là “Không đi làm” thì tính là Đạt PV mà không đi làm, kể cả khi NGÀY VÀO LÀM đã có ngày.</li>
         <li><b>Chiến dịch:</b> ở chế độ tháng, lấy các dòng KPI có Tháng (cột A) bằng tháng của kỳ; ở chế độ tuần, lấy các dòng KPI có khoảng NGÀY BẮT ĐẦU – NGÀY KẾT THÚC giao với tuần. Trạng thái hoàn thành lấy nguyên cột L (KẾT QUẢ: HOÀN THÀNH / NỢ CHIẾN DỊCH), không tự tính lại từ THỰC ĐẠT và MỤC TIÊU — vì trong Sheet có dòng cột L ghi HOÀN THÀNH dù THỰC ĐẠT nhỏ hơn MỤC TIÊU.</li>
+        <li><b>Danh sách chi tiết khi bấm vào số liệu:</b> chỉ hiện họ tên và vị trí (kèm ngày của bước đó và nguồn), không hiện số điện thoại / email. Danh sách tôn trọng đúng kỳ, vị trí, nguồn và tháng chiến dịch đang chọn.</li>
+        <li><b>Cần thực hiện trong kỳ:</b> phát sinh trong kỳ (NGÀY BẮT ĐẦU, cột F, nằm trong kỳ) + tháng cũ còn nợ (NGÀY BẮT ĐẦU trước kỳ và cột L = NỢ CHIẾN DỊCH). Trong số đó, “đã hoàn thành” và “còn nợ” tính theo cột L tại cuối kỳ.</li>
+        <li><b>Chiến dịch hoàn thành trong kỳ:</b> cột L = HOÀN THÀNH và tháng của chiến dịch (cột A) bằng tháng của kỳ (chế độ tháng), hoặc khoảng ngày của chiến dịch giao với tuần (chế độ tuần).</li>
+        <li><b>Chiến dịch còn nợ tại thời điểm lọc:</b> cột L = NỢ CHIẾN DỊCH và NGÀY BẮT ĐẦU không sau cuối kỳ (cuối tháng hoặc chủ nhật của tuần). Quá hạn = NGÀY KẾT THÚC (cột G) trước cuối kỳ — số ngày quá hạn = cuối kỳ trừ NGÀY KẾT THÚC. Trong hạn = NGÀY KẾT THÚC từ cuối kỳ trở đi.</li>
         <li><b>Nguồn:</b> giữ riêng từng nguồn, không gộp Facebook với Facebook (ADs), TopCV với TopCV (ADs). Tỷ lệ % tính trên tổng số CV trong kỳ.</li>
         <li><b>Vị trí:</b> có 2 bảng — tổng hợp theo nhóm (phần chữ trước “ (”) và chi tiết từng vị trí chính xác.</li>
         <li><b>Tỷ lệ từ chối nhận việc:</b> Đạt PV mà Không đi làm / tổng số Đạt PV (ngày phỏng vấn trong kỳ).</li>
@@ -170,6 +218,17 @@ footer a{color:var(--orange)}
         <li><b>Bộ lọc:</b> vị trí, nguồn và tháng chiến dịch kết hợp với kỳ đã chọn. Lọc tháng chiến dịch dùng tên chiến dịch (cột AB của UNGVIEN, cột H của KPI) — chỉ lấy các dòng thuộc chiến dịch của tháng đó.</li>
       </ul>
     </details>
+  </div>
+
+  <div id="candidateModal" class="modal-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head"><h3 id="modalTitle"></h3><button class="modal-close" id="modalClose" type="button" aria-label="Đóng">✕</button></div>
+      <p class="modal-note">Chỉ hiện họ tên và vị trí, không hiện số điện thoại / email.</p>
+      <input type="search" id="modalSearch" placeholder="Tìm theo họ tên hoặc vị trí…">
+      <p class="modal-count" id="modalCount"></p>
+      <div class="modal-list" id="modalList"></div>
+      <div class="modal-foot"><button class="btn" id="modalCloseBtn" type="button">Đóng</button></div>
+    </div>
   </div>
 
   <footer>
@@ -306,9 +365,60 @@ function rowPassesBase(r){
 function isDat(r){ return r[12]==="Đạt" || r[12]==="Đạt, lưu backup"; }
 function isDatPV(r){ return r[16]==="Đạt" || r[16]==="Đạt, lưu backup"; }
 
+/* ---------- Candidate detail modal (name + position only, never phone/email) ---------- */
+var MODAL={rows:[],dateCols:[],title:""};
+function modalDateText(r){
+  for(var i=0;i<MODAL.dateCols.length;i++){
+    var t=parseDate(r[MODAL.dateCols[i]]);
+    if(t!=null) return fmtDate(t);
+  }
+  return "—";
+}
+function renderModalList(){
+  var q=String($("modalSearch").value||"").trim().toLowerCase();
+  var rows=MODAL.rows.filter(function(r){
+    if(!q) return true;
+    return String(r[2]||"").toLowerCase().indexOf(q)>=0 || String(r[8]||"").toLowerCase().indexOf(q)>=0;
+  });
+  rows=rows.slice().sort(function(a,b){
+    var da=parseDate(a[MODAL.dateCols[0]]), db=parseDate(b[MODAL.dateCols[0]]);
+    if(da!=null&&db!=null&&da!==db) return db-da;
+    if(da!=null&&db==null) return -1;
+    if(da==null&&db!=null) return 1;
+    var na=String(a[2]||""), nb=String(b[2]||"");
+    return na<nb?-1:(na>nb?1:0);
+  });
+  $("modalCount").textContent=rows.length+" ứng viên"+(q?" (đang lọc theo “"+$("modalSearch").value+"”)":"");
+  if(!rows.length){ $("modalList").innerHTML="<p>Không có ứng viên nào.</p>"; return; }
+  $("modalList").innerHTML=rows.map(function(r){
+    return "<div class=\"modal-row\"><div class=\"nm\">"+esc(r[2])+"</div><div class=\"ps\">"+esc(r[8])+(r[7]?" · "+esc(r[7]):"")+"</div><div class=\"dt\">"+esc(modalDateText(r))+"</div></div>";
+  }).join("");
+}
+function openCandidateModal(title,rows,dateCols){
+  MODAL={rows:rows.slice(),dateCols:dateCols,title:title};
+  $("modalTitle").textContent=title;
+  $("modalSearch").value="";
+  renderModalList();
+  $("candidateModal").style.display="flex";
+  document.body.style.overflow="hidden";
+}
+function closeCandidateModal(){
+  $("candidateModal").style.display="none";
+  document.body.style.overflow="";
+}
+/* Lists for the current render — keys used by clickable numbers (data-list). */
+var LISTS={};
+function openList(key,title,dateCols){
+  var rows=LISTS[key]||[];
+  openCandidateModal(title+" — "+rows.length+" ứng viên",rows,dateCols);
+}
+
 /* ---------- Render ---------- */
-function card(title,big,sub,basis){
-  return "<div class=\"card\"><h3>"+esc(title)+"</h3><div class=\"big\">"+big+"</div>"+(sub?"<div class=\"sub\">"+sub+"</div>":"")+(basis?"<div class=\"basis\">"+esc(basis)+"</div>":"")+"</div>";
+function card(title,big,sub,basis,listKey){
+  var bigHtml = listKey
+    ? "<div class=\"big numlink\" data-list=\""+esc(listKey)+"\" title=\"Bấm để xem chi tiết\">"+big+"</div>"
+    : "<div class=\"big\">"+big+"</div>";
+  return "<div class=\"card\"><h3>"+esc(title)+"</h3>"+bigHtml+(sub?"<div class=\"sub\">"+sub+"</div>":"")+(basis?"<div class=\"basis\">"+esc(basis)+"</div>":"")+"</div>";
 }
 function render(){
   var pr=periodRange();
@@ -334,19 +444,20 @@ function render(){
   var dangLam=diLam.filter(function(r){ return !String(r[23]||"").trim() && !String(r[24]||"").trim(); });
   var nghiLam=diLam.filter(function(r){ return String(r[23]||"").trim() || String(r[24]||"").trim(); });
   var khongNhan=datPv.filter(function(r){ return String(r[17]||"").trim()==="Không đi làm"; });
+  LISTS={cv:cvRows,cvDat:cvDat,start:startRows,datPv:datPv,diLam:diLam,dangLam:dangLam,nghiLam:nghiLam,khongNhan:khongNhan};
 
   $("cards").innerHTML =
-    card("CV trong kỳ",cvRows.length,"CV Đạt: <b>"+cvDat.length+"</b> ("+pctStr(cvDat.length,cvRows.length)+")","Theo NGÀY nhận CV")+
+    card("CV trong kỳ",cvRows.length,"CV Đạt: <span class=\"numlink\" data-list=\"cvDat\" title=\"Bấm để xem chi tiết\"><b>"+cvDat.length+"</b></span> ("+pctStr(cvDat.length,cvRows.length)+")","Theo NGÀY nhận CV","cv")+
     card("Phỏng vấn trong kỳ",pvRows.length,"Đến PV: <b>"+denPv.length+"</b> · Tỷ lệ đến: <b>"+pctStr(denPv.length,pvRows.length)+"</b>","Theo NGÀY PHỎNG VẤN")+
     card("Đạt PV",datPv.length,pctStr(datPv.length,denPv.length)+" trên số đến PV","Theo NGÀY PHỎNG VẤN")+
-    card("Chốt đi làm trong kỳ",startRows.length,pctStr(startRows.length,datPv.length)+" trên số Đạt PV","Theo NGÀY VÀO LÀM + cột R = Đi làm");
+    card("Chốt đi làm trong kỳ",startRows.length,pctStr(startRows.length,datPv.length)+" trên số Đạt PV","Theo NGÀY VÀO LÀM + cột R = Đi làm","start");
 
   $("hireCards").innerHTML =
-    card("Nhận việc (Đạt PV)",datPv.length,"","Theo ngày phỏng vấn trong kỳ")+
-    card("Đi làm",diLam.length,pctStr(diLam.length,datPv.length)+" trên số Đạt PV","Cột R = Đi làm")+
-    card("Đang đi làm",dangLam.length,"","R = Đi làm, không có ngày nghỉ / lý do nghỉ")+
-    card("Đi làm rồi nghỉ",nghiLam.length,pctStr(nghiLam.length,diLam.length)+" trên số đi làm","Có NGÀY NGHỈ hoặc lý do nghỉ")+
-    card("Không nhận việc",khongNhan.length,pctStr(khongNhan.length,datPv.length)+" trên số Đạt PV","Đạt PV nhưng R = Không đi làm");
+    card("Nhận việc (Đạt PV)",datPv.length,"","Theo ngày phỏng vấn trong kỳ","datPv")+
+    card("Đi làm",diLam.length,pctStr(diLam.length,datPv.length)+" trên số Đạt PV","Cột R = Đi làm","diLam")+
+    card("Đang đi làm",dangLam.length,"","R = Đi làm, không có ngày nghỉ / lý do nghỉ","dangLam")+
+    card("Đi làm rồi nghỉ",nghiLam.length,pctStr(nghiLam.length,diLam.length)+" trên số đi làm","Có NGÀY NGHỈ hoặc lý do nghỉ","nghiLam")+
+    card("Không nhận việc",khongNhan.length,pctStr(khongNhan.length,datPv.length)+" trên số Đạt PV","Đạt PV nhưng R = Không đi làm","khongNhan");
 
   /* --- Campaigns --- */
   var campRows=DATA.kpi.filter(function(r){
@@ -377,6 +488,68 @@ function render(){
   ct+="<tr class=\"total\"><td colspan=\"3\">Tổng</td><td class=\"num\">"+mt+"</td><td class=\"num\">"+td+"</td><td colspan=\"2\">"+ht+" hoàn thành / "+no+" nợ</td></tr>";
   $("campTable").innerHTML=ct;
 
+  /* --- Campaigns: needed in period / completed in period / outstanding at period end --- */
+  function campMonthOk(r){ return !state.campMonth || String(r[0]||"").trim()===state.campMonth; }
+  var newIn=DATA.kpi.filter(function(r){ return campMonthOk(r) && inPeriod(parseDate(r[5]),pr); });
+  var carried=DATA.kpi.filter(function(r){ return campMonthOk(r) && parseDate(r[5])!=null && parseDate(r[5])<pr.start && String(r[11]||"").trim()==="NỢ CHIẾN DỊCH"; });
+  var need=newIn.concat(carried);
+  var needMT=need.reduce(function(a,r){return a+num(r[3]);},0);
+  var needHT=need.filter(function(r){return String(r[11]||"").trim()==="HOÀN THÀNH";}).length;
+  var needNO=need.filter(function(r){return String(r[11]||"").trim()==="NỢ CHIẾN DỊCH";}).length;
+  $("needCards").innerHTML =
+    card("Phát sinh trong kỳ",newIn.length,"Mục tiêu: <b>"+newIn.reduce(function(a,r){return a+num(r[3]);},0)+"</b>","Ngày bắt đầu nằm trong kỳ")+
+    card("Tháng cũ còn nợ",carried.length,"Mục tiêu: <b>"+carried.reduce(function(a,r){return a+num(r[3]);},0)+"</b>","Ngày bắt đầu trước kỳ, cột L = NỢ CHIẾN DỊCH")+
+    card("Tổng cần thực hiện",need.length,"Mục tiêu: <b>"+needMT+"</b>","Phát sinh + tháng cũ còn nợ")+
+    card("Trong số đó: đã hoàn thành",needHT,"","Cột L = HOÀN THÀNH")+
+    card("Trong số đó: còn nợ",needNO,"","Cột L = NỢ CHIẾN DỊCH");
+  $("needLine").textContent="Trong "+need.length+" chiến dịch cần thực hiện (tổng mục tiêu "+needMT+"), đã hoàn thành "+needHT+" và còn nợ "+needNO+" tại cuối kỳ "+fmtDate(pr.end)+".";
+
+  var doneRows=campRows.filter(function(r){ return String(r[11]||"").trim()==="HOÀN THÀNH"; });
+  var doneMT=doneRows.reduce(function(a,r){return a+num(r[3]);},0);
+  var doneTD=doneRows.reduce(function(a,r){return a+num(r[4]);},0);
+  $("doneCards").innerHTML =
+    card("Chiến dịch hoàn thành",doneRows.length,"","Cột L = HOÀN THÀNH")+
+    card("Mục tiêu (tổng)",doneMT,"","KPI cột D")+
+    card("Thực đạt (tổng)",doneTD,pctStr(doneTD,doneMT)+" trên mục tiêu","KPI cột E");
+  var dt="<tr><th>Tên chiến dịch</th><th>Vị trí</th><th>Người phụ trách</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Thời gian</th></tr>";
+  doneRows.forEach(function(r){
+    dt+="<tr><td>"+esc(r[7])+"</td><td>"+esc(r[2])+"</td><td>"+esc(r[1])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td>"+esc(r[5])+" – "+esc(r[6])+"</td></tr>";
+  });
+  if(!doneRows.length) dt+="<tr><td colspan=\"6\">Không có chiến dịch nào hoàn thành trong kỳ đã chọn.</td></tr>";
+  dt+="<tr class=\"total\"><td colspan=\"3\">Tổng</td><td class=\"num\">"+doneMT+"</td><td class=\"num\">"+doneTD+"</td><td></td></tr>";
+  $("doneTable").innerHTML=dt;
+
+  var outstanding=DATA.kpi.filter(function(r){
+    return campMonthOk(r) && String(r[11]||"").trim()==="NỢ CHIẾN DỊCH" && parseDate(r[5])!=null && parseDate(r[5])<=pr.end;
+  });
+  function campGroup(list){
+    var mt2=list.reduce(function(a,r){return a+num(r[3]);},0);
+    var td2=list.reduce(function(a,r){return a+num(r[4]);},0);
+    return {rows:list,mt:mt2,td:td2};
+  }
+  var overdue=campGroup(outstanding.filter(function(r){ var e=parseDate(r[6]); return e!=null && e<pr.end; }));
+  var inDeadline=campGroup(outstanding.filter(function(r){ var e=parseDate(r[6]); return e==null || e>=pr.end; }));
+  $("overdueCards").innerHTML =
+    card("Chiến dịch quá hạn",overdue.rows.length,"Mục tiêu: <b>"+overdue.mt+"</b> · Thực đạt: <b>"+overdue.td+"</b>","Ngày kết thúc trước "+fmtDate(pr.end))+
+    card("Mục tiêu (tổng)",overdue.mt,"","KPI cột D")+
+    card("Thực đạt (tổng)",overdue.td,"","KPI cột E");
+  $("inDeadlineCards").innerHTML =
+    card("Chiến dịch trong hạn",inDeadline.rows.length,"Mục tiêu: <b>"+inDeadline.mt+"</b> · Thực đạt: <b>"+inDeadline.td+"</b>","Ngày kết thúc từ "+fmtDate(pr.end)+" trở đi")+
+    card("Mục tiêu (tổng)",inDeadline.mt,"","KPI cột D")+
+    card("Thực đạt (tổng)",inDeadline.td,"","KPI cột E");
+  function overdueTable(list,showDays){
+    var h="<tr><th>Tên chiến dịch</th><th>Vị trí</th><th>Người phụ trách</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Ngày kết thúc</th>"+(showDays?"<th class=\"num\">Số ngày quá hạn</th>":"")+"</tr>";
+    list.forEach(function(r){
+      var e=parseDate(r[6]);
+      var days=e!=null? Math.round((pr.end-e)/86400000) : null;
+      h+="<tr><td>"+esc(r[7])+"</td><td>"+esc(r[2])+"</td><td>"+esc(r[1])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td>"+esc(r[6]||"—")+"</td>"+(showDays?"<td class=\"num\">"+(days!=null?days:"—")+"</td>":"")+"</tr>";
+    });
+    if(!list.length) h+="<tr><td colspan=\""+(showDays?7:6)+"\">Không có chiến dịch nào trong nhóm này.</td></tr>";
+    return h;
+  }
+  $("overdueTable").innerHTML=overdueTable(overdue.rows,true);
+  $("inDeadlineTable").innerHTML=overdueTable(inDeadline.rows,false);
+
   /* --- Sources --- */
   var srcMap={};
   function srcRow(s){ if(!srcMap[s]) srcMap[s]={name:s,cv:0,cvDat:0,den:0,datPv:0,dilam:0}; return srcMap[s]; }
@@ -386,7 +559,7 @@ function render(){
   var srcList=Object.keys(srcMap).map(function(k){return srcMap[k];}).sort(function(a,b){return b.cv-a.cv;});
   var st="<tr><th>Nguồn</th><th class=\"num\">CV</th><th class=\"num\">% trên tổng CV</th><th class=\"num\">CV Đạt</th><th class=\"num\">Đến PV</th><th class=\"num\">Đạt PV</th><th class=\"num\">Đi làm</th><th class=\"num\">CV → Đi làm</th></tr>";
   srcList.forEach(function(x){
-    st+="<tr><td>"+esc(x.name)+"</td><td class=\"num\">"+x.cv+"</td><td class=\"num\">"+pctStr(x.cv,cvRows.length)+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.den+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td><td class=\"num\">"+pctStr(x.dilam,x.cv)+"</td></tr>";
+    st+="<tr><td>"+esc(x.name)+"</td><td class=\"num numlink\" data-list=\"src\" data-key=\""+esc(x.name)+"\" title=\"Bấm để xem chi tiết\">"+x.cv+"</td><td class=\"num\">"+pctStr(x.cv,cvRows.length)+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.den+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td><td class=\"num\">"+pctStr(x.dilam,x.cv)+"</td></tr>";
   });
   if(!srcList.length) st+="<tr><td colspan=\"8\">Không có dữ liệu trong kỳ đã chọn.</td></tr>";
   st+="<tr class=\"total\"><td>Tổng</td><td class=\"num\">"+cvRows.length+"</td><td class=\"num\">100%</td><td class=\"num\">"+cvDat.length+"</td><td class=\"num\">"+denPv.length+"</td><td class=\"num\">"+datPv.length+"</td><td class=\"num\">"+startRows.length+"</td><td class=\"num\">"+pctStr(startRows.length,cvRows.length)+"</td></tr>";
@@ -409,17 +582,17 @@ function render(){
     kpiTargetG[g]=(kpiTargetG[g]||0)+num(r[3]);
     kpiTargetD[d]=(kpiTargetD[d]||0)+num(r[3]);
   });
-  function posTable(map,targetMap){
+  function posTable(map,targetMap,kind){
     var list=Object.keys(map).map(function(k){return map[k];}).sort(function(a,b){return b.cv-a.cv;});
     var h="<tr><th>Vị trí</th><th class=\"num\">CV</th><th class=\"num\">CV Đạt</th><th class=\"num\">Đạt PV</th><th class=\"num\">Đi làm</th><th class=\"num\">Mục tiêu KPI</th></tr>";
     list.forEach(function(x){
-      h+="<tr><td>"+esc(x.name)+"</td><td class=\"num\">"+x.cv+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td><td class=\"num\">"+(targetMap[x.name]||0)+"</td></tr>";
+      h+="<tr><td>"+esc(x.name)+"</td><td class=\"num numlink\" data-list=\""+kind+"\" data-key=\""+esc(x.name)+"\" title=\"Bấm để xem chi tiết\">"+x.cv+"</td><td class=\"num\">"+x.cvDat+"</td><td class=\"num\">"+x.datPv+"</td><td class=\"num\">"+x.dilam+"</td><td class=\"num\">"+(targetMap[x.name]||0)+"</td></tr>";
     });
     if(!list.length) h+="<tr><td colspan=\"6\">Không có dữ liệu trong kỳ đã chọn.</td></tr>";
     return h;
   }
-  $("posGroupTable").innerHTML=posTable(gMap,kpiTargetG);
-  $("posDetailTable").innerHTML=posTable(dMap,kpiTargetD);
+  $("posGroupTable").innerHTML=posTable(gMap,kpiTargetG,"posG");
+  $("posDetailTable").innerHTML=posTable(dMap,kpiTargetD,"posD");
 
   /* --- Funnel --- */
   var steps=[
@@ -485,6 +658,33 @@ function render(){
   if(!staffList.length) sh+="<tr><td colspan=\"6\">Không có dữ liệu trong kỳ đã chọn.</td></tr>";
   $("staffTable").innerHTML=sh;
 }
+
+/* ---------- Modal events + clickable numbers (event delegation) ---------- */
+$("modalClose").addEventListener("click",closeCandidateModal);
+$("modalCloseBtn").addEventListener("click",closeCandidateModal);
+$("candidateModal").addEventListener("click",function(e){ if(e.target===$("candidateModal")) closeCandidateModal(); });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape" && $("candidateModal").style.display==="flex") closeCandidateModal(); });
+$("modalSearch").addEventListener("input",renderModalList);
+document.addEventListener("click",function(e){
+  var el=e.target.closest? e.target.closest("[data-list]") : null;
+  if(!el) return;
+  var key=el.getAttribute("data-list");
+  var k2=el.getAttribute("data-key")||"";
+  var titles={cv:"CV trong kỳ",cvDat:"CV Đạt trong kỳ",start:"Chốt đi làm trong kỳ",datPv:"Nhận việc (Đạt PV)",diLam:"Đi làm",dangLam:"Đang đi làm",nghiLam:"Đi làm rồi nghỉ",khongNhan:"Không nhận việc"};
+  var dateCols={cv:[0],cvDat:[0],start:[18,13,0],datPv:[13,0],diLam:[18,13,0],dangLam:[18,13,0],nghiLam:[18,13,0],khongNhan:[13,0],src:[0],posG:[0],posD:[0]};
+  if(key==="src"){
+    var rows=(LISTS.cv||[]).filter(function(r){ return String(r[7]||"").trim()===k2; });
+    openCandidateModal("CV theo nguồn — "+k2+" — "+rows.length+" ứng viên",rows,[0]);
+  } else if(key==="posG"){
+    var rowsG=(LISTS.cv||[]).filter(function(r){ return groupKey(r[8])===k2; });
+    openCandidateModal("CV theo nhóm vị trí — "+k2+" — "+rowsG.length+" ứng viên",rowsG,[0]);
+  } else if(key==="posD"){
+    var rowsD=(LISTS.cv||[]).filter(function(r){ return String(r[8]||"").trim()===k2; });
+    openCandidateModal("CV theo vị trí — "+k2+" — "+rowsD.length+" ứng viên",rowsD,[0]);
+  } else if(titles[key]){
+    openList(key,titles[key],dateCols[key]);
+  }
+});
 
 /* ---------- Events ---------- */
 $("modeMonth").addEventListener("click",function(){ state.mode="month"; render(); });
