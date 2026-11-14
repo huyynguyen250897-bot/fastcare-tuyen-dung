@@ -94,14 +94,14 @@ td.numlink{color:var(--orange);font-weight:700}
     <button class="btn ghost" id="prevBtn" type="button">← Trước</button>
     <span id="monthBox">
       <label for="monthInput">Tháng</label>
-      <input type="month" id="monthInput" value="2026-10">
+      <input type="month" id="monthInput" value="2026-11">
     </span>
     <span id="weekBox" style="display:none">
       <label for="weekInput">Chọn ngày trong tuần</label>
-      <input type="date" id="weekInput" value="2026-10-26">
+      <input type="date" id="weekInput" value="2026-11-14">
     </span>
     <button class="btn ghost" id="nextBtn" type="button">Sau →</button>
-    <span class="period" id="periodLabel">Tháng 10/2026</span>
+    <span class="period" id="periodLabel">Tháng 11/2026</span>
     <label for="posFilter">Vị trí</label>
     <select id="posFilter"><option value="">Tất cả vị trí</option></select>
     <label for="srcFilter">Nguồn</label>
@@ -128,33 +128,17 @@ td.numlink{color:var(--orange);font-weight:700}
     <section>
       <h2>Chiến dịch</h2>
       <p class="hint" id="campHint"></p>
-      <div class="cards" id="campCards" style="margin:0 0 12px"></div>
-      <div class="scroll"><table id="campTable"></table></div>
-    </section>
-
-    <section>
-      <h2>Cần thực hiện trong kỳ</h2>
-      <p class="hint">Tổng số chiến dịch cần thực hiện trong kỳ = chiến dịch phát sinh trong kỳ (ngày bắt đầu nằm trong kỳ) + chiến dịch tháng cũ còn nợ (ngày bắt đầu trước kỳ và cột L = NỢ CHIẾN DỊCH).</p>
-      <div class="cards" id="needCards" style="margin:0 0 12px"></div>
-      <p class="hint" id="needLine"></p>
-    </section>
-
-    <section>
-      <h2>Chiến dịch hoàn thành trong kỳ</h2>
-      <p class="hint">Cột L = HOÀN THÀNH, và tháng của chiến dịch bằng tháng của kỳ (chế độ tháng) hoặc khoảng ngày của chiến dịch giao với tuần (chế độ tuần).</p>
-      <div class="cards" id="doneCards" style="margin:0 0 12px"></div>
-      <div class="scroll"><table id="doneTable"></table></div>
-    </section>
-
-    <section>
-      <h2>Chiến dịch còn nợ tại thời điểm lọc</h2>
-      <p class="hint">Tính tại cuối kỳ đã chọn (cuối tháng hoặc chủ nhật của tuần): cột L = NỢ CHIẾN DỊCH và ngày bắt đầu không sau cuối kỳ. Quá hạn = ngày kết thúc trước cuối kỳ; trong hạn = ngày kết thúc từ cuối kỳ trở đi.</p>
-      <h3 style="margin:12px 0 6px;font-size:15px">Quá hạn</h3>
-      <div class="cards" id="overdueCards" style="margin:0 0 12px"></div>
-      <div class="scroll"><table id="overdueTable"></table></div>
-      <h3 style="margin:16px 0 6px;font-size:15px">Trong hạn</h3>
-      <div class="cards" id="inDeadlineCards" style="margin:0 0 12px"></div>
-      <div class="scroll"><table id="inDeadlineTable"></table></div>
+      <div class="cards" id="flowCards" style="margin:0 0 12px"></div>
+      <p class="hint" id="flowLine"></p>
+      <h3 style="margin:12px 0 6px;font-size:15px">Chiến dịch còn nợ từ các tháng trước</h3>
+      <p class="hint" id="carryLine"></p>
+      <div class="scroll"><table id="carryTable"></table></div>
+      <h3 style="margin:16px 0 6px;font-size:15px">Chiến dịch phát sinh trong kỳ</h3>
+      <p class="hint" id="newLine"></p>
+      <div class="scroll"><table id="newTable"></table></div>
+      <h3 style="margin:16px 0 6px;font-size:15px">Chiến dịch hoàn thành trong kỳ</h3>
+      <p class="hint" id="doneLine"></p>
+      <div class="scroll"><table id="doneFlowTable"></table></div>
     </section>
 
     <section>
@@ -202,11 +186,12 @@ td.numlink{color:var(--orange);font-weight:700}
         <li><b>Chốt đi làm trong kỳ:</b> NGÀY VÀO LÀM (cột S) nằm trong kỳ và TÌNH TRẠNG ĐI LÀM (cột R) là “Đi làm”.</li>
         <li><b>Kết quả nhận việc:</b> tính từ các ứng viên Đạt PV (ngày phỏng vấn trong kỳ). Nhận việc = tổng số Đạt PV. Đi làm = cột R là “Đi làm”. Đang đi làm = cột R là “Đi làm” và cả NGÀY NGHỈ (cột X) lẫn GHI CHÚ LÝ DO NGHỈ VIỆC (cột Y) đều trống. Đi làm rồi nghỉ = cột R là “Đi làm” và có NGÀY NGHỈ hoặc lý do nghỉ. Không nhận việc = Đạt PV nhưng cột R là “Không đi làm”.</li>
         <li><b>Dòng mâu thuẫn:</b> ưu tiên cột R. Ví dụ Đạt PV nhưng cột R là “Không đi làm” thì tính là Đạt PV mà không đi làm, kể cả khi NGÀY VÀO LÀM đã có ngày.</li>
-        <li><b>Chiến dịch:</b> ở chế độ tháng, lấy các dòng KPI có Tháng (cột A) bằng tháng của kỳ; ở chế độ tuần, lấy các dòng KPI có khoảng NGÀY BẮT ĐẦU – NGÀY KẾT THÚC giao với tuần. Trạng thái hoàn thành lấy nguyên cột L (KẾT QUẢ: HOÀN THÀNH / NỢ CHIẾN DỊCH), không tự tính lại từ THỰC ĐẠT và MỤC TIÊU — vì trong Sheet có dòng cột L ghi HOÀN THÀNH dù THỰC ĐẠT nhỏ hơn MỤC TIÊU.</li>
+        <li><b>Chiến dịch — tổng trong kỳ:</b> tổng chiến dịch trong kỳ = còn nợ cuối kỳ + hoàn thành trong kỳ. Còn nợ cuối kỳ = các dòng KPI có cột L (KẾT QUẢ) là “NỢ CHIẾN DỊCH” và NGÀY BẮT ĐẦU (cột F) không sau cuối kỳ. Hoàn thành trong kỳ = cột L là “HOÀN THÀNH” và NGÀY KẾT THÚC (cột G) nằm trong kỳ. Tỷ lệ hoàn thành = hoàn thành trong kỳ / tổng trong kỳ.</li>
+        <li><b>Chiến dịch còn nợ từ các tháng trước / phát sinh trong kỳ:</b> hai nhóm con của còn nợ cuối kỳ. “Còn nợ từ các tháng trước” = NGÀY BẮT ĐẦU trước kỳ. “Phát sinh trong kỳ” = NGÀY BẮT ĐẦU nằm trong kỳ.</li>
+        <li><b>Quá hạn / trong hạn (còn nợ cuối kỳ):</b> so NGÀY KẾT THÚC (cột G) với cuối kỳ (cuối tháng hoặc chủ nhật của tuần). Quá hạn = ngày kết thúc trước cuối kỳ; trong hạn = ngày kết thúc từ cuối kỳ trở đi (dòng nào không đọc được ngày kết thúc thì xếp vào trong hạn).</li>
+        <li><b>Lưu ý về “hoàn thành trong kỳ”:</b> Sheet không có cột ngày hoàn thành, nên app dùng NGÀY KẾT THÚC làm mốc — một chiến dịch được tính là hoàn thành trong tháng mà ngày kết thúc của nó rơi vào. Vì vậy tháng 9/2026 có 0 chiến dịch hoàn thành theo cách tính này: các chiến dịch tháng 9 đều kết thúc vào tháng 10.</li>
+        <li><b>Mục Chiến dịch chỉ theo kỳ đã chọn:</b> không theo bộ lọc “Tháng chiến dịch” ở thanh lọc (bộ lọc đó vẫn áp dụng cho các mục CV, kết quả nhận việc, nguồn, vị trí). Trạng thái hoàn thành lấy nguyên cột L, không tự tính lại từ THỰC ĐẠT và MỤC TIÊU — vì trong Sheet có dòng cột L ghi HOÀN THÀNH dù THỰC ĐẠT nhỏ hơn MỤC TIÊU.</li>
         <li><b>Danh sách chi tiết khi bấm vào số liệu:</b> chỉ hiện họ tên và vị trí (kèm ngày của bước đó và nguồn), không hiện số điện thoại / email. Danh sách tôn trọng đúng kỳ, vị trí, nguồn và tháng chiến dịch đang chọn.</li>
-        <li><b>Cần thực hiện trong kỳ:</b> phát sinh trong kỳ (NGÀY BẮT ĐẦU, cột F, nằm trong kỳ) + tháng cũ còn nợ (NGÀY BẮT ĐẦU trước kỳ và cột L = NỢ CHIẾN DỊCH). Trong số đó, “đã hoàn thành” và “còn nợ” tính theo cột L tại cuối kỳ.</li>
-        <li><b>Chiến dịch hoàn thành trong kỳ:</b> cột L = HOÀN THÀNH và tháng của chiến dịch (cột A) bằng tháng của kỳ (chế độ tháng), hoặc khoảng ngày của chiến dịch giao với tuần (chế độ tuần).</li>
-        <li><b>Chiến dịch còn nợ tại thời điểm lọc:</b> cột L = NỢ CHIẾN DỊCH và NGÀY BẮT ĐẦU không sau cuối kỳ (cuối tháng hoặc chủ nhật của tuần). Quá hạn = NGÀY KẾT THÚC (cột G) trước cuối kỳ — số ngày quá hạn = cuối kỳ trừ NGÀY KẾT THÚC. Trong hạn = NGÀY KẾT THÚC từ cuối kỳ trở đi.</li>
         <li><b>Nguồn:</b> giữ riêng từng nguồn, không gộp Facebook với Facebook (ADs), TopCV với TopCV (ADs). Tỷ lệ % tính trên tổng số CV trong kỳ.</li>
         <li><b>Vị trí:</b> có 2 bảng — tổng hợp theo nhóm (phần chữ trước “ (”) và chi tiết từng vị trí chính xác.</li>
         <li><b>Tỷ lệ từ chối nhận việc:</b> Đạt PV mà Không đi làm / tổng số Đạt PV (ngày phỏng vấn trong kỳ).</li>
@@ -289,7 +274,7 @@ function median(arr){ if(!arr.length) return null; var a=arr.slice().sort(functi
 
 /* ---------- State ---------- */
 var DATA={ungvien:[],kpi:[],chiphi:[]};
-var state={mode:"month", month:"2026-10", weekDate:"2026-10-26", position:"", source:"", campMonth:""};
+var state={mode:"month", month:"2026-11", weekDate:"2026-11-14", position:"", source:"", campMonth:""};
 var $=function(id){ return document.getElementById(id); };
 
 function periodRange(){
@@ -459,96 +444,69 @@ function render(){
     card("Đi làm rồi nghỉ",nghiLam.length,pctStr(nghiLam.length,diLam.length)+" trên số đi làm","Có NGÀY NGHỈ hoặc lý do nghỉ","nghiLam")+
     card("Không nhận việc",khongNhan.length,pctStr(khongNhan.length,datPv.length)+" trên số Đạt PV","Đạt PV nhưng R = Không đi làm","khongNhan");
 
-  /* --- Campaigns --- */
+  /* --- Campaigns: monthly flow (period only, ignores the "Tháng chiến dịch" filter) --- */
+  // campRows is kept only for the KPI-target column of the position tables below.
   var campRows=DATA.kpi.filter(function(r){
     if(state.campMonth && String(r[0]||"").trim()!==state.campMonth) return false;
     if(state.mode==="month"){ var m=/^Tháng\s*(\d{1,2})/.exec(String(r[0]||"").trim()); return m && +m[1]===+state.month.slice(5,7); }
     var s=parseDate(r[5]), e=parseDate(r[6]);
     return s!=null && e!=null && s<=pr.end && e>=pr.start;
   });
-  var mt=campRows.reduce(function(a,r){return a+num(r[3]);},0);
-  var td=campRows.reduce(function(a,r){return a+num(r[4]);},0);
-  var ht=campRows.filter(function(r){return String(r[11]||"").trim()==="HOÀN THÀNH";}).length;
-  var no=campRows.filter(function(r){return String(r[11]||"").trim()==="NỢ CHIẾN DỊCH";}).length;
-  $("campHint").textContent = state.mode==="month"
-    ? "Các dòng KPI có Tháng bằng tháng của kỳ đã chọn"+(state.campMonth?" và thuộc "+state.campMonth:"")+". Trạng thái hoàn thành lấy nguyên cột L của Sheet."
-    : "Các dòng KPI có khoảng ngày bắt đầu – kết thúc giao với tuần đã chọn"+(state.campMonth?" và thuộc "+state.campMonth:"")+". Trạng thái hoàn thành lấy nguyên cột L của Sheet.";
-  $("campCards").innerHTML =
-    card("Mục tiêu (tổng)",mt,"","KPI cột D")+
-    card("Thực đạt (tổng)",td,pctStr(td,mt)+" trên mục tiêu","KPI cột E")+
-    card("Chiến dịch hoàn thành",ht,"","Cột L = HOÀN THÀNH")+
-    card("Chiến dịch nợ",no,"","Cột L = NỢ CHIẾN DỊCH")+
-    card("% chiến dịch hoàn thành",pctStr(ht,campRows.length),campRows.length+" chiến dịch","HOÀN THÀNH / tổng số");
-  var ct="<tr><th>Tên chiến dịch</th><th>Vị trí</th><th>Người phụ trách</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Kết quả (cột L)</th><th>Thời gian</th></tr>";
-  campRows.forEach(function(r){
-    var ok=String(r[11]||"").trim()==="HOÀN THÀNH";
-    ct+="<tr><td>"+esc(r[7])+"</td><td>"+esc(r[2])+"</td><td>"+esc(r[1])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td><span class=\"badge "+(ok?"ok":"bad")+"\">"+esc(r[11])+"</span></td><td>"+esc(r[5])+" – "+esc(r[6])+"</td></tr>";
-  });
-  if(!campRows.length) ct+="<tr><td colspan=\"7\">Không có chiến dịch nào trong kỳ đã chọn.</td></tr>";
-  ct+="<tr class=\"total\"><td colspan=\"3\">Tổng</td><td class=\"num\">"+mt+"</td><td class=\"num\">"+td+"</td><td colspan=\"2\">"+ht+" hoàn thành / "+no+" nợ</td></tr>";
-  $("campTable").innerHTML=ct;
-
-  /* --- Campaigns: needed in period / completed in period / outstanding at period end --- */
-  function campMonthOk(r){ return !state.campMonth || String(r[0]||"").trim()===state.campMonth; }
-  var newIn=DATA.kpi.filter(function(r){ return campMonthOk(r) && inPeriod(parseDate(r[5]),pr); });
-  var carried=DATA.kpi.filter(function(r){ return campMonthOk(r) && parseDate(r[5])!=null && parseDate(r[5])<pr.start && String(r[11]||"").trim()==="NỢ CHIẾN DỊCH"; });
-  var need=newIn.concat(carried);
-  var needMT=need.reduce(function(a,r){return a+num(r[3]);},0);
-  var needHT=need.filter(function(r){return String(r[11]||"").trim()==="HOÀN THÀNH";}).length;
-  var needNO=need.filter(function(r){return String(r[11]||"").trim()==="NỢ CHIẾN DỊCH";}).length;
-  $("needCards").innerHTML =
-    card("Phát sinh trong kỳ",newIn.length,"Mục tiêu: <b>"+newIn.reduce(function(a,r){return a+num(r[3]);},0)+"</b>","Ngày bắt đầu nằm trong kỳ")+
-    card("Tháng cũ còn nợ",carried.length,"Mục tiêu: <b>"+carried.reduce(function(a,r){return a+num(r[3]);},0)+"</b>","Ngày bắt đầu trước kỳ, cột L = NỢ CHIẾN DỊCH")+
-    card("Tổng cần thực hiện",need.length,"Mục tiêu: <b>"+needMT+"</b>","Phát sinh + tháng cũ còn nợ")+
-    card("Trong số đó: đã hoàn thành",needHT,"","Cột L = HOÀN THÀNH")+
-    card("Trong số đó: còn nợ",needNO,"","Cột L = NỢ CHIẾN DỊCH");
-  $("needLine").textContent="Trong "+need.length+" chiến dịch cần thực hiện (tổng mục tiêu "+needMT+"), đã hoàn thành "+needHT+" và còn nợ "+needNO+" tại cuối kỳ "+fmtDate(pr.end)+".";
-
-  var doneRows=campRows.filter(function(r){ return String(r[11]||"").trim()==="HOÀN THÀNH"; });
-  var doneMT=doneRows.reduce(function(a,r){return a+num(r[3]);},0);
-  var doneTD=doneRows.reduce(function(a,r){return a+num(r[4]);},0);
-  $("doneCards").innerHTML =
-    card("Chiến dịch hoàn thành",doneRows.length,"","Cột L = HOÀN THÀNH")+
-    card("Mục tiêu (tổng)",doneMT,"","KPI cột D")+
-    card("Thực đạt (tổng)",doneTD,pctStr(doneTD,doneMT)+" trên mục tiêu","KPI cột E");
-  var dt="<tr><th>Tên chiến dịch</th><th>Vị trí</th><th>Người phụ trách</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Thời gian</th></tr>";
-  doneRows.forEach(function(r){
-    dt+="<tr><td>"+esc(r[7])+"</td><td>"+esc(r[2])+"</td><td>"+esc(r[1])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td>"+esc(r[5])+" – "+esc(r[6])+"</td></tr>";
-  });
-  if(!doneRows.length) dt+="<tr><td colspan=\"6\">Không có chiến dịch nào hoàn thành trong kỳ đã chọn.</td></tr>";
-  dt+="<tr class=\"total\"><td colspan=\"3\">Tổng</td><td class=\"num\">"+doneMT+"</td><td class=\"num\">"+doneTD+"</td><td></td></tr>";
-  $("doneTable").innerHTML=dt;
-
+  function sumMT(list){ return list.reduce(function(a,r){return a+num(r[3]);},0); }
+  function sumTD(list){ return list.reduce(function(a,r){return a+num(r[4]);},0); }
+  // (a) Còn nợ cuối kỳ: L = NỢ CHIẾN DỊCH và đã bắt đầu trước cuối kỳ.
   var outstanding=DATA.kpi.filter(function(r){
-    return campMonthOk(r) && String(r[11]||"").trim()==="NỢ CHIẾN DỊCH" && parseDate(r[5])!=null && parseDate(r[5])<=pr.end;
+    return String(r[11]||"").trim()==="NỢ CHIẾN DỊCH" && parseDate(r[5])!=null && parseDate(r[5])<=pr.end;
   });
-  function campGroup(list){
-    var mt2=list.reduce(function(a,r){return a+num(r[3]);},0);
-    var td2=list.reduce(function(a,r){return a+num(r[4]);},0);
-    return {rows:list,mt:mt2,td:td2};
-  }
-  var overdue=campGroup(outstanding.filter(function(r){ var e=parseDate(r[6]); return e!=null && e<pr.end; }));
-  var inDeadline=campGroup(outstanding.filter(function(r){ var e=parseDate(r[6]); return e==null || e>=pr.end; }));
-  $("overdueCards").innerHTML =
-    card("Chiến dịch quá hạn",overdue.rows.length,"Mục tiêu: <b>"+overdue.mt+"</b> · Thực đạt: <b>"+overdue.td+"</b>","Ngày kết thúc trước "+fmtDate(pr.end))+
-    card("Mục tiêu (tổng)",overdue.mt,"","KPI cột D")+
-    card("Thực đạt (tổng)",overdue.td,"","KPI cột E");
-  $("inDeadlineCards").innerHTML =
-    card("Chiến dịch trong hạn",inDeadline.rows.length,"Mục tiêu: <b>"+inDeadline.mt+"</b> · Thực đạt: <b>"+inDeadline.td+"</b>","Ngày kết thúc từ "+fmtDate(pr.end)+" trở đi")+
-    card("Mục tiêu (tổng)",inDeadline.mt,"","KPI cột D")+
-    card("Thực đạt (tổng)",inDeadline.td,"","KPI cột E");
-  function overdueTable(list,showDays){
-    var h="<tr><th>Tên chiến dịch</th><th>Vị trí</th><th>Người phụ trách</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Ngày kết thúc</th>"+(showDays?"<th class=\"num\">Số ngày quá hạn</th>":"")+"</tr>";
-    list.forEach(function(r){
-      var e=parseDate(r[6]);
-      var days=e!=null? Math.round((pr.end-e)/86400000) : null;
-      h+="<tr><td>"+esc(r[7])+"</td><td>"+esc(r[2])+"</td><td>"+esc(r[1])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td>"+esc(r[6]||"—")+"</td>"+(showDays?"<td class=\"num\">"+(days!=null?days:"—")+"</td>":"")+"</tr>";
+  var carried=outstanding.filter(function(r){ return parseDate(r[5])<pr.start; });
+  var newNo=outstanding.filter(function(r){ return inPeriod(parseDate(r[5]),pr); });
+  // (b) Hoàn thành trong kỳ: L = HOÀN THÀNH và NGÀY KẾT THÚC nằm trong kỳ
+  // (Sheet không có cột ngày hoàn thành nên dùng ngày kết thúc làm mốc).
+  var doneFlow=DATA.kpi.filter(function(r){
+    return String(r[11]||"").trim()==="HOÀN THÀNH" && inPeriod(parseDate(r[6]),pr);
+  });
+  var overdue=outstanding.filter(function(r){ var e=parseDate(r[6]); return e!=null && e<pr.end; });
+  var inDeadline=outstanding.filter(function(r){ var e=parseDate(r[6]); return e==null || e>=pr.end; });
+  var totalFlow=outstanding.length+doneFlow.length;
+  var totalMT=sumMT(outstanding)+sumMT(doneFlow);
+  var totalTD=sumTD(outstanding)+sumTD(doneFlow);
+  $("campHint").textContent="Tổng trong kỳ = chiến dịch còn nợ cuối kỳ (đã bắt đầu trước cuối kỳ) + chiến dịch hoàn thành trong kỳ (ngày kết thúc nằm trong kỳ). Mục này chỉ theo kỳ đã chọn, không theo bộ lọc “Tháng chiến dịch” ở trên.";
+  $("flowCards").innerHTML =
+    card("Tổng chiến dịch trong kỳ",totalFlow,"Mục tiêu: <b>"+totalMT+"</b> · Thực đạt: <b>"+totalTD+"</b>","Còn nợ cuối kỳ + hoàn thành trong kỳ")+
+    card("Hoàn thành trong kỳ",doneFlow.length,"Mục tiêu: <b>"+sumMT(doneFlow)+"</b> · Thực đạt: <b>"+sumTD(doneFlow)+"</b>","Ngày kết thúc nằm trong kỳ")+
+    card("Còn nợ cuối kỳ",outstanding.length,"Mục tiêu: <b>"+sumMT(outstanding)+"</b> · Thực đạt: <b>"+sumTD(outstanding)+"</b> · Trong đó quá hạn: <b>"+overdue.length+"</b> / trong hạn: <b>"+inDeadline.length+"</b>","Cột L = NỢ CHIẾN DỊCH, đã bắt đầu trước cuối kỳ")+
+    card("Tỷ lệ hoàn thành",pctStr(doneFlow.length,totalFlow),doneFlow.length+" / "+totalFlow+" chiến dịch","Hoàn thành / tổng trong kỳ");
+  $("flowLine").textContent="Tổng trong kỳ = còn nợ cuối kỳ + hoàn thành trong kỳ: "+outstanding.length+" + "+doneFlow.length+" = "+totalFlow+" ("+pr.label+").";
+  function monthNum(r){ var m=/^Tháng\s*(\d{1,2})/.exec(String(r[0]||"").trim()); return m? +m[1] : 99; }
+  function sortCamp(list){
+    return list.slice().sort(function(a,b){
+      var ma=monthNum(a), mb=monthNum(b);
+      if(ma!==mb) return ma-mb;
+      var sa=parseDate(a[5]), sb=parseDate(b[5]);
+      if(sa!=null&&sb!=null&&sa!==sb) return sa-sb;
+      if(sa!=null&&sb==null) return -1;
+      if(sa==null&&sb!=null) return 1;
+      var pa=String(a[2]||""), pb=String(b[2]||"");
+      return pa<pb?-1:(pa>pb?1:0);
     });
-    if(!list.length) h+="<tr><td colspan=\""+(showDays?7:6)+"\">Không có chiến dịch nào trong nhóm này.</td></tr>";
+  }
+  function campFlowTable(list,emptyMsg){
+    var h="<tr><th>STT</th><th>Tháng</th><th>Vị trí</th><th class=\"num\">Mục tiêu</th><th class=\"num\">Thực đạt</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th><th>Loại chiến dịch</th><th>Kết quả</th></tr>";
+    var rows=sortCamp(list);
+    rows.forEach(function(r,i){
+      var ok=String(r[11]||"").trim()==="HOÀN THÀNH";
+      h+="<tr><td class=\"num\">"+(i+1)+"</td><td>"+esc(r[0])+"</td><td>"+esc(r[2])+"</td><td class=\"num\">"+num(r[3])+"</td><td class=\"num\">"+num(r[4])+"</td><td>"+esc(r[5]||"—")+"</td><td>"+esc(r[6]||"—")+"</td><td>"+esc(r[8]||"—")+"</td><td><span class=\"badge "+(ok?"ok":"bad")+"\">"+esc(r[11])+"</span></td></tr>";
+    });
+    if(!rows.length) h+="<tr><td colspan=\"9\">"+esc(emptyMsg)+"</td></tr>";
+    else h+="<tr class=\"total\"><td colspan=\"3\">Tổng</td><td class=\"num\">"+sumMT(rows)+"</td><td class=\"num\">"+sumTD(rows)+"</td><td colspan=\"4\"></td></tr>";
     return h;
   }
-  $("overdueTable").innerHTML=overdueTable(overdue.rows,true);
-  $("inDeadlineTable").innerHTML=overdueTable(inDeadline.rows,false);
+  $("carryLine").textContent=carried.length+" chiến dịch · Tổng mục tiêu: "+sumMT(carried)+".";
+  $("carryTable").innerHTML=campFlowTable(carried,"Không có chiến dịch nào còn nợ từ các tháng trước.");
+  $("newLine").textContent=newNo.length+" chiến dịch · Tổng mục tiêu: "+sumMT(newNo)+".";
+  $("newTable").innerHTML=campFlowTable(newNo,"Không có chiến dịch nào phát sinh trong kỳ.");
+  $("doneLine").textContent=doneFlow.length+" chiến dịch · Tổng mục tiêu: "+sumMT(doneFlow)+" · Thực đạt: "+sumTD(doneFlow)+".";
+  $("doneFlowTable").innerHTML=campFlowTable(doneFlow,"Không có chiến dịch nào hoàn thành trong kỳ.");
 
   /* --- Sources --- */
   var srcMap={};
@@ -689,8 +647,8 @@ document.addEventListener("click",function(e){
 /* ---------- Events ---------- */
 $("modeMonth").addEventListener("click",function(){ state.mode="month"; render(); });
 $("modeWeek").addEventListener("click",function(){ state.mode="week"; render(); });
-$("monthInput").addEventListener("change",function(){ state.month=this.value||"2026-10"; render(); });
-$("weekInput").addEventListener("change",function(){ state.weekDate=this.value||"2026-10-26"; render(); });
+$("monthInput").addEventListener("change",function(){ state.month=this.value||"2026-11"; render(); });
+$("weekInput").addEventListener("change",function(){ state.weekDate=this.value||"2026-11-14"; render(); });
 $("prevBtn").addEventListener("click",function(){
   if(state.mode==="month"){ var y=+state.month.slice(0,4), m=+state.month.slice(5,7)-1; if(m<1){m=12;y--;} state.month=y+"-"+String(m).padStart(2,"0"); $("monthInput").value=state.month; }
   else { var d=new Date(state.weekDate+"T00:00:00Z"); d.setUTCDate(d.getUTCDate()-7); state.weekDate=d.toISOString().slice(0,10); $("weekInput").value=state.weekDate; }
