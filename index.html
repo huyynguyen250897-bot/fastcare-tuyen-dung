@@ -148,6 +148,12 @@ td.numlink{color:var(--orange);font-weight:700}
     </section>
 
     <section>
+      <h2>Báo cáo CV theo ngày</h2>
+      <p class="hint">Tính theo NGÀY nhận CV (cột A tab UNGVIEN), trong kỳ đã chọn và theo các bộ lọc đang chọn. Cột Khác là các CV có trạng thái Black list hoặc chưa ghi kết quả. Bấm vào số CV, CV Đạt hoặc CV Không đạt của một ngày để xem danh sách họ tên và vị trí của ngày đó.</p>
+      <div class="scroll"><table id="dailyTable"></table></div>
+    </section>
+
+    <section>
       <h2>Vị trí — tổng hợp theo nhóm</h2>
       <p class="hint">Nhóm = phần chữ trước dấu “ (” — ví dụ Tư vấn (NTT) và Tư vấn (VVN) cùng nhóm “Tư vấn”. Mục tiêu KPI là tổng MỤC TIÊU của nhóm trong tháng chiến dịch của kỳ. Bấm vào số CV của một nhóm để xem danh sách họ tên và vị trí.</p>
       <div class="scroll"><table id="posGroupTable"></table></div>
@@ -181,6 +187,7 @@ td.numlink{color:var(--orange);font-weight:700}
       <ul>
         <li><b>Kỳ:</b> tháng = từ ngày 1 đến ngày cuối tháng; tuần = từ thứ 2 đến chủ nhật. Chọn ngày bất kỳ trong tuần để xác định tuần đó.</li>
         <li><b>CV trong kỳ:</b> hàng có NGÀY (cột A tab UNGVIEN) nằm trong kỳ. CV Đạt = TRẠNG THÁI CV (cột M) là “Đạt” hoặc “Đạt, lưu backup”.</li>
+        <li><b>Báo cáo CV theo ngày:</b> nhóm các CV trong kỳ theo NGÀY nhận CV (cột A), ngày mới nhất lên trước. CV Đạt = TRẠNG THÁI CV (cột M) là “Đạt” hoặc “Đạt, lưu backup”; CV Không đạt = “Không Đạt”; Khác = các trạng thái còn lại (Black list hoặc chưa ghi kết quả), sao cho CV = Đạt + Không đạt + Khác. Cột Vị trí liệt kê từng vị trí trong ngày kèm số lượng, xếp theo số lượng giảm dần rồi theo tên. Bấm vào số CV, CV Đạt hoặc CV Không đạt của một ngày để xem danh sách họ tên và vị trí của ngày đó.</li>
         <li><b>Phỏng vấn trong kỳ:</b> hàng có NGÀY PHỎNG VẤN (cột N) nằm trong kỳ. Đến PV = TÌNH TRẠNG ĐẾN PV (cột P) là “Đến”. Tỷ lệ đến PV = Đến PV / số buổi phỏng vấn đã lên lịch trong kỳ.</li>
         <li><b>Đạt PV:</b> ngày phỏng vấn trong kỳ và KẾT QUẢ PHỎNG VẤN (cột Q) là “Đạt” hoặc “Đạt, lưu backup”. Lưu ý trong file này giá trị là “Đạt”, không phải “Đạt PV”.</li>
         <li><b>Chốt đi làm trong kỳ:</b> NGÀY VÀO LÀM (cột S) nằm trong kỳ và TÌNH TRẠNG ĐI LÀM (cột R) là “Đi làm”.</li>
@@ -523,6 +530,39 @@ function render(){
   st+="<tr class=\"total\"><td>Tổng</td><td class=\"num\">"+cvRows.length+"</td><td class=\"num\">100%</td><td class=\"num\">"+cvDat.length+"</td><td class=\"num\">"+denPv.length+"</td><td class=\"num\">"+datPv.length+"</td><td class=\"num\">"+startRows.length+"</td><td class=\"num\">"+pctStr(startRows.length,cvRows.length)+"</td></tr>";
   $("srcTable").innerHTML=st;
 
+  /* --- Daily CV report: group cvRows by NGÀY (col 0), newest day first --- */
+  var dayMap={};
+  cvRows.forEach(function(r){
+    var t=parseDate(r[0]); if(t==null) return;
+    var key=fmtDate(t);
+    if(!dayMap[key]) dayMap[key]={date:key,t:t,cv:0,dat:0,not:0,other:0,pos:{}};
+    var d=dayMap[key]; d.cv++;
+    var st12=String(r[12]||"").trim();
+    if(isDat(r)) d.dat++;
+    else if(st12==="Không Đạt") d.not++;
+    else d.other++;
+    var p=String(r[8]||"").trim()||"(Trống)";
+    d.pos[p]=(d.pos[p]||0)+1;
+  });
+  var dayList=Object.keys(dayMap).map(function(k){return dayMap[k];}).sort(function(a,b){return b.t-a.t;});
+  function posSummary(pos){
+    return Object.keys(pos).map(function(k){return {name:k,n:pos[k]};})
+      .sort(function(a,b){ if(b.n!==a.n) return b.n-a.n; return a.name<b.name?-1:(a.name>b.name?1:0); })
+      .map(function(x){ return x.name+" ×"+x.n; }).join("; ");
+  }
+  function dayNumLink(key,kind,val){
+    return "<span class=\"numlink\" data-list=\"day\" data-key=\""+esc(key)+"\" data-kind=\""+kind+"\" title=\"Bấm để xem chi tiết\">"+val+"</span>";
+  }
+  var dh="<tr><th>Ngày</th><th class=\"num\">CV</th><th class=\"num\">CV Đạt</th><th class=\"num\">CV Không đạt</th><th class=\"num\">Khác</th><th>Vị trí</th></tr>";
+  var totD={cv:0,dat:0,not:0,other:0};
+  dayList.forEach(function(d){
+    totD.cv+=d.cv; totD.dat+=d.dat; totD.not+=d.not; totD.other+=d.other;
+    dh+="<tr><td>"+esc(d.date)+"</td><td class=\"num\">"+dayNumLink(d.date,"all",d.cv)+"</td><td class=\"num\">"+dayNumLink(d.date,"dat",d.dat)+"</td><td class=\"num\">"+dayNumLink(d.date,"not",d.not)+"</td><td class=\"num\">"+d.other+"</td><td>"+esc(posSummary(d.pos))+"</td></tr>";
+  });
+  if(!dayList.length) dh+="<tr><td colspan=\"6\">Không có CV nào trong kỳ đã chọn.</td></tr>";
+  else dh+="<tr class=\"total\"><td>Tổng</td><td class=\"num\">"+totD.cv+"</td><td class=\"num\">"+totD.dat+"</td><td class=\"num\">"+totD.not+"</td><td class=\"num\">"+totD.other+"</td><td></td></tr>";
+  $("dailyTable").innerHTML=dh;
+
   /* --- Positions: grouped + exact --- */
   function posAgg(rows, keyFn){
     var m={};
@@ -639,6 +679,16 @@ document.addEventListener("click",function(e){
   } else if(key==="posD"){
     var rowsD=(LISTS.cv||[]).filter(function(r){ return String(r[8]||"").trim()===k2; });
     openCandidateModal("CV theo vị trí — "+k2+" — "+rowsD.length+" ứng viên",rowsD,[0]);
+  } else if(key==="day"){
+    var kind=el.getAttribute("data-kind")||"all";
+    var rowsDay=(LISTS.cv||[]).filter(function(r){
+      if(fmtDate(parseDate(r[0]))!==k2) return false;
+      if(kind==="dat") return isDat(r);
+      if(kind==="not") return String(r[12]||"").trim()==="Không Đạt";
+      return true;
+    });
+    var kindLabel=kind==="dat"?"CV Đạt":(kind==="not"?"CV Không đạt":"CV");
+    openCandidateModal(kindLabel+" ngày "+k2+" — "+rowsDay.length+" ứng viên",rowsDay,[0]);
   } else if(titles[key]){
     openList(key,titles[key],dateCols[key]);
   }
